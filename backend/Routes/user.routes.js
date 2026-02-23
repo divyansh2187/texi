@@ -9,6 +9,6 @@ router.post("/register", [
     body("fullname.firstName").isLength({ min: 3 }).withMessage("first name should be at least 3 characters"),
     body("password").isLength({ min: 6 }).withMessage("password should be at least 6  characters"),
 
-], userController.register)
+], userController.registerUser)
 
 module.exports = router;
