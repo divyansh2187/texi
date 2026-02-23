@@ -1,10 +1,114 @@
-# User Registration Endpoint Documentation
 
-## Endpoint
+# User Endpoints Documentation
+
+
+## Register User
+
+**Endpoint:**
 
 `POST /users/register`
 
 Registers a new user in the system.
+---
+
+## Login User
+
+**Endpoint:**
+
+`POST /users/login`
+
+Authenticates a user and returns a JWT token.
+
+### Request Body
+
+Send a JSON object with the following structure:
+
+```
+{
+  "email": "string (valid email, required)",
+  "password": "string (min 6 chars, required)"
+}
+```
+
+#### Fields
+- `email` (string, required): User's email address (must be valid and registered)
+- `password` (string, required): User's password (at least 6 characters)
+
+---
+
+### Responses
+
+#### Success
+- **200 OK**
+  - User authenticated successfully.
+  - Response body:
+    ```json
+    {
+      "user": { ...user fields... },
+      "token": "JWT token string"
+    }
+    ```
+
+#### Validation Errors
+- **400 Bad Request**
+  - Invalid input data. Response body contains an array of error messages.
+    ```json
+    {
+      "errors": [
+        { "msg": "Error message", "param": "field", ... }
+      ]
+    }
+    ```
+
+#### Authentication Errors
+- **401 Unauthorized**
+  - Invalid credentials (wrong email or password).
+    ```json
+    {
+      "message": "invalid credentials"
+    }
+    ```
+
+#### Other Errors
+- **500 Internal Server Error**
+  - Unexpected server error.
+
+---
+
+### Example Request
+
+```
+POST /users/login
+Content-Type: application/json
+
+{
+  "email": "john.doe@example.com",
+  "password": "securePassword123"
+}
+```
+
+### Example Success Response
+
+```
+Status: 200 OK
+{
+  "user": {
+    "_id": "...",
+    "fullname": { "firstName": "John", "lastName": "Doe" },
+    "email": "john.doe@example.com"
+    // ...other fields
+  },
+  "token": "...jwt token..."
+}
+```
+
+---
+
+### Notes
+- All required fields must be present and valid.
+- The email must be registered.
+- The password is checked securely.
+- On success, a JWT token is returned for authentication.
 
 ---
 
