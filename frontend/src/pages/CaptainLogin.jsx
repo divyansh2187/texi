@@ -1,20 +1,34 @@
 import React, { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink , useNavigate } from "react-router-dom";
+import { loginCaptain } from "../api/captainApi";
+import { useContext } from "react";
+import { CaptainDataContext } from "../context/CaptainContext";
 
 const CaptainLogin = () => {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
-  const [captainData, setCaptainData] = useState({});
+ const { setCaptain } = useContext(CaptainDataContext);
 
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
 
-    setCaptainData({
+    const CaptainData = {
       email: email,
       password: pass,
-    });
+    };
 
-    console.log(email, pass);
+    try{
+      const response = await loginCaptain(CaptainData);
+      if(response.status === "success"){
+        setCaptain(response.data);
+        navigate("/home");
+      }
+
+    }
+     catch(error){
+        console.log(error);
+      }
 
     setEmail("");
     setPass("");

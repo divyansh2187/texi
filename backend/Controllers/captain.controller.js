@@ -33,10 +33,16 @@ module.exports.registerCaptain = async(req, res, next) => {
 
     const token = captain.generateToken();
 
-     res.status(201).json({
-        token,
-        captain
-    });
+  
+
+    res
+    .status(201)
+    .cookie("token", token, {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+      sameSite: "lax",
+    })
+    .json({ status: "success", captain, token });
 
 }
 
@@ -66,7 +72,14 @@ module.exports.loginCaptain = async(req , res , next)=>{
 
     res.cookie('token' , token);
 
-    res.status(200).json({token , captain});
+   res
+    .status(200)
+    .cookie("token", token, {
+      httpOnly: true,
+      secure: false, // true in production (HTTPS)
+      sameSite: "lax",
+    })
+    .json({ status: "success", captain, token });
 
 }
 

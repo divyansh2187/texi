@@ -25,4 +25,10 @@ router.get('/profile' , authMiddleware.authCaptain , captainController.getCaptai
 
 router.get('/logout' , authMiddleware.authCaptain , captainController.logoutCaptain);
 
+router.get("/auth-check", authMiddleware.authCaptain , (req , res)=>{
+    res.json({message:"success", role:"captain" , captain : req.captain})
+})
+
+
+
 module.exports = router;

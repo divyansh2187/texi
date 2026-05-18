@@ -2,47 +2,56 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { FcGoogle } from "react-icons/fc";
 import { FaApple } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import { registerUser } from "../api/AuthApi";
+import { UserDataContext } from "../context/UserContext";
 
 const UserSignup = () => {
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
+  const [email, setemail] = useState("");
+  const [pass, setpass] = useState("");
+  const navigate = useNavigate();
+  const { User, setUser } = React.useContext(UserDataContext);
 
-  const [firstname, setFirstname] = useState("")
-  const [lastname, setLastname] = useState("")
-  const [email, setemail] = useState("")
-  const [pass, setpass] = useState("")
-  const [UserData, setUserData] = useState({})
-
-  const submitHandler = (e) => {
+  const submitHandler = async (e) => {
     e.preventDefault();
 
-    setUserData({
-      fullname:{
-      firstname: firstname,
-      lastname: lastname
+    const newUser = {
+      fullname: {
+        firstname,
+        lastname,
       },
-      email: email,
-      password: pass
-    })
+      email,
+      password: pass,
+    };
 
-  
+    try {
+      const data = await registerUser(newUser);
 
-    setFirstname("")
-    setLastname("")
-    setemail("")
-    setpass("")
-  }
+      if (data.status === "success") {
+        setUser(data.user);
+        navigate("/home");
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+    setFirstname("");
+    setLastname("");
+    setemail("");
+    setpass("");
+  };
 
   return (
     <div className="max-full mx-auto h-screen flex flex-col gap-3  lg:w-full items-center">
-
       {/* top bar */}
       <div className="w-full bg-black px-4 py-4 text-white">
         <h1 className="text-3xl font-light">texi</h1>
       </div>
 
       <div className="lg:bg-white h-full lg:w-[30%] w-full px-5 py-4 flex flex-col justify-between lg:rounded-xl lg:scale-85">
-
         <form className="flex flex-col gap-4" onSubmit={submitHandler}>
-
           <h3 className="text-2xl font-semibold">Create your account</h3>
 
           {/* first + last name */}
@@ -87,9 +96,7 @@ const UserSignup = () => {
           />
 
           {/* signup button */}
-          <button
-            className="w-full py-3 rounded text-xl bg-black text-white hover:bg-gray-900 transition"
-          >
+          <button className="w-full py-3 rounded text-xl bg-black text-white hover:bg-gray-900 transition">
             Sign Up
           </button>
 
@@ -124,9 +131,7 @@ const UserSignup = () => {
               Login
             </NavLink>
           </p>
-
         </form>
-
       </div>
     </div>
   );
