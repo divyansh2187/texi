@@ -26,6 +26,8 @@ router.get('/profile' , authMiddleware.authCaptain , captainController.getCaptai
 router.get('/logout' , authMiddleware.authCaptain , captainController.logoutCaptain);
 
 router.get("/auth-check", authMiddleware.authCaptain , (req , res)=>{
+    console.log("AUTH CHECK HIT");
+
     res.json({message:"success", role:"captain" , captain : req.captain})
 })
 

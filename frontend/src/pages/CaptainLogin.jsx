@@ -22,7 +22,7 @@ const CaptainLogin = () => {
       const response = await loginCaptain(CaptainData);
       if(response.status === "success"){
         setCaptain(response.data);
-        navigate("/home");
+        navigate("/CaptainHome");
       }
 
     }

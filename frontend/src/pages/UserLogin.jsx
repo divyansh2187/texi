@@ -23,7 +23,7 @@ const UserLogin = () => {
 
       if (response.status == "success") {
         setUser(response.user);
-        navigate("/home");
+        navigate("/UserHome");
       }
     } catch (error) {
       console.log(error);

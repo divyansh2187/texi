@@ -31,7 +31,7 @@ const UserSignup = () => {
 
       if (data.status === "success") {
         setUser(data.user);
-        navigate("/home");
+        navigate("/UserHome");
       }
     } catch (err) {
       console.log(err);

@@ -2,17 +2,17 @@ import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 
-const Protected = ({ children }) => {
+const CaptainProtected = ({ children }) => {
 
   const [auth, setAuth] = useState(null);
 
   useEffect(() => {
 
-    const checkUserAuth = async () => {
+    const checkCaptainAuth = async () => {
 
       try {
 
-        await axiosInstance.get("/users/auth-check");
+        await axiosInstance.get("/captain/auth-check");
 
         setAuth(true);
 
@@ -24,7 +24,7 @@ const Protected = ({ children }) => {
 
     };
 
-    checkUserAuth();
+    checkCaptainAuth();
 
   }, []);
 
@@ -37,8 +37,8 @@ const Protected = ({ children }) => {
   // Else → redirect to login
   return auth
     ? children
-    : <Navigate to="/login" replace />;
+    : <Navigate to="/captain-login" replace />;
 
 };
 
-export default Protected;
+export default CaptainProtected;

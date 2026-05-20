@@ -65,8 +65,6 @@ module.exports.loginUser = async (req, res, next) => {
 
   const token = user.generateToken();
 
-  res.cookie("token", token);
-
   res
     .status(200)
     .cookie("token", token, {

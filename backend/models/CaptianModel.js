@@ -82,7 +82,9 @@ const CaptainSchema = new mongoose.Schema ({
 
 
 CaptainSchema.methods.generateToken = function() {
-    const token = jwt.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ _id: this._id 
+        , role: "captain"
+    }, process.env.JWT_SECRET, { expiresIn: '24h' });
     return token;
 }
 

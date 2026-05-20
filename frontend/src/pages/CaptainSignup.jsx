@@ -42,8 +42,8 @@ const CaptainSignup = () => {
       const response = await registerCaptain(CaptainData);
 
       if (response.status === "success") {
-        setCaptain(response.data);
-        navigate("/home");
+        setCaptain(response.captain);
+        navigate("/CaptainHome");
       }
     } catch (err) {
       console.log(err);
