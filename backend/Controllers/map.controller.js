@@ -1,24 +1,74 @@
 const mapService = require("../services/map.service");
 
+
 const getCoordinates = async (req, res) => {
     try {
         const { address } = req.query;
 
-        const coordinates =
-            await mapService.getAddressCoordinates(address);
+        const coordinates = await mapService.getAddressCoordinates(address);
 
         res.status(200).json({
             success: true,
-            data: coordinates
+            data: coordinates,
         });
     } catch (error) {
         res.status(400).json({
             success: false,
-            message: error.message
+            message: error.message,
         });
     }
 };
 
+const getDistanceAndTime = async (req, res) => {
+    try {
+        const { origin, destination } = req.query;
+
+        if (!origin || !destination) {
+            return res.status(400).json({
+                success: false,
+                message: "Origin and destination are required",
+            });
+        }
+        const result = await mapService.getDistanceAndTimeService(origin, destination);
+
+        return res.status(200).json({
+            success: true,
+            data: result,
+        });
+        } catch (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
+
+const getAddressSuggestions = async(req , res)=>{
+    try{
+        const { input } = req.query;
+        if(!input || !input.trim()){
+            return res.status(400).json({
+                success: false,
+                message: "Input parameter is required"
+            });
+        }        
+        const suggestions = await mapService.getAddressSuggestions(input);
+        return res.status(200).json({
+            success: true,
+            data:suggestions
+        })
+
+    }catch(error){
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
+
+
 module.exports = {
-    getCoordinates
+    getCoordinates,
+    getDistanceAndTime,
+    getAddressSuggestions
 };

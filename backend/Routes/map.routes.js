@@ -17,4 +17,8 @@ router.get("/test", (req, res) => {
     res.send("Map routes working");
 });
 
+router.get("/get-distance&time", mapController.getDistanceAndTime);
+
+router.get("/suggestions",mapController.getAddressSuggestions);
+
 module.exports = router;
