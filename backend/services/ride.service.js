@@ -1,5 +1,6 @@
 const rideModel = require('../models/rideModel');
 const mapService = require('../services/map.service');
+const crypto = require('crypto');
 
 const fareRates = {
     auto: { baseFare: 15, perKm: 10, perMinute: 0.5 },
@@ -29,6 +30,16 @@ const getFare = async (pickup, destination, vehicleType = 'car') => {
 };
 
 
+const getOTP = (num) => {
+function generateOTP(num) {
+    const otp = crypto.randomInt(0, Math.pow(10, num)).toString().padStart(num, '0');
+    return otp;
+}
+return generateOTP(num);
+}
+
+
+
 module.exports.createRide = async ({user, pickup, destination, vehicleType , distance, duration}) => {
     try {
         if (!pickup || !destination) {
@@ -43,6 +54,7 @@ module.exports.createRide = async ({user, pickup, destination, vehicleType , dis
             fare: fare.amount,
             duration: fare.duration,
             distance: fare.distance,
+            otp: getOTP(4),
         });
         return newRide;
     } catch (error) {
@@ -50,3 +62,5 @@ module.exports.createRide = async ({user, pickup, destination, vehicleType , dis
     }
 
 }
+
+module.exports.getOTP = getOTP;

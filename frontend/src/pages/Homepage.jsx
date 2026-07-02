@@ -1,19 +1,23 @@
 import React from "react";
 import { CiUser } from "react-icons/ci";
-import { useState, useRef } from "react";
+import { useState, useRef,useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { SlArrowDown } from "react-icons/sl";
+
 
 import Suggestion from "../components/Suggestion";
 import VehiclePanel from "../components/VehicalPanel";
 import ConfirmRide from "../components/ConfirmRide";
 import LookingForDriver from "../components/Looking";
 import WaitingForDriver from "../components/waiting";
+import axios from "axios";
+
 
 const Homepage = () => {
   const [pickup, setPickup] = useState("");
   const [destination, setDestination] = useState("");
+  const [currentLocation, setCurrentLocation] = useState(null);
   const [panelOpen, setpanelOpen] = useState(false);
   const [vehicalpanel, setvehicalpanel] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState("car");
@@ -28,6 +32,7 @@ const Homepage = () => {
   const confirmrideref = useRef(null);
   const lookingref = useRef(null);
   const waitingref = useRef(null);
+
 
 
   useGSAP(() => {
@@ -119,6 +124,70 @@ const Homepage = () => {
       });
     }
   }, [driverFound]);
+
+
+useEffect(() => {
+    let watchId;
+
+    const startTracking = () => {
+        if (!navigator.geolocation) {
+            console.log("Geolocation is not supported");
+            return;
+        }
+
+        watchId = navigator.geolocation.watchPosition(
+            async (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                console.log("GPS:", lat, lng);
+                console.log("Accuracy:", accuracy);
+
+                // Ignore very inaccurate locations
+                if (accuracy > 100) {
+                    console.log("Waiting for better GPS signal...");
+                    return;
+                }
+
+                setCurrentLocation({ lat, lng });
+
+                try {
+                    const response = await axios.get(
+                        `${import.meta.env.VITE_BASEURL}/map/reverse-geocode`,
+                        {
+                            params: { lat, lng },
+                            withCredentials: true,
+                        }
+                    );
+
+                    setPickup(response.data.data.address);
+                } catch (err) {
+                    console.log("Reverse Geocode Error:", err);
+                }
+            },
+            (error) => {
+                console.log("Location Error:", error);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0,
+            }
+        );
+    };
+
+    startTracking();
+
+    return () => {
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+        }
+    };
+}, []);
+
+
+
 
   return (
     <div className="">

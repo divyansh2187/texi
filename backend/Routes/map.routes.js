@@ -21,4 +21,6 @@ router.get("/get-distance&time", mapController.getDistanceAndTime);
 
 router.get("/suggestions",mapController.getAddressSuggestions);
 
+router.get("/reverse-geocode", mapController.reverseGeocode);
+
 module.exports = router;

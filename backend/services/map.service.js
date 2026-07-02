@@ -99,8 +99,32 @@ const getAddressSuggestions = async (input) => {
     }));
 };
 
+const reverseGeocode = async (lat, lng) => {
+    if (!lat || !lng) {
+        throw new Error("Latitude and longitude are required");
+    }
+
+    const response = await mapApi.get("/reverse", {
+        params: {
+            format: "json",
+            lat: lat,
+            lon: lng,
+            addressdetails: 1
+        }
+    });
+
+    return {
+        address: response.data.display_name,
+        lat: Number(response.data.lat),
+        lng: Number(response.data.lon)
+    }
+
+};
+
+
 module.exports = {
     getAddressCoordinates,
     getDistanceAndTimeService,
-    getAddressSuggestions
+    getAddressSuggestions,
+    reverseGeocode
 };

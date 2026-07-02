@@ -38,6 +38,8 @@ const suggestions = [
   },
 ];
 
+
+
 const Suggestion = ({ vehiclepanel, setvehicalpanel }) => {
 
   const [selected, setSelected] = useState(null);

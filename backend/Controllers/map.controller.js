@@ -66,9 +66,33 @@ const getAddressSuggestions = async(req , res)=>{
     }
 }
 
+const reverseGeocode = async (req, res) => {
+    try {
+        const { lat, lng } = req.query;
+        if (!lat || !lng) {
+            return res.status(400).json({
+                success: false,
+                message: "Latitude and longitude are required",
+
+            });
+        }
+        const address = await mapService.reverseGeocode(lat, lng);
+
+        return res.status(200).json({
+            success: true,
+            data: address
+        });
+    } catch (error) {
+        return res.status(400).json({
+            success: false,
+            message: error.message
+        });
+    }
+}
 
 module.exports = {
     getCoordinates,
     getDistanceAndTime,
-    getAddressSuggestions
+    getAddressSuggestions,
+    reverseGeocode
 };

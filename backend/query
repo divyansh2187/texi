@@ -1,0 +1,1 @@
+Get-EventLog -LogName Application -Newest 20 | Where-Object {$_.Source -like "*Mongo*"} | Format-ListGet-EventLog -LogName Application -Newest 20 | Where-Object {$_.Source -like "*Mongo*"} | Format-ListMongoDB
