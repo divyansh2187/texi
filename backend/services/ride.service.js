@@ -13,7 +13,6 @@ const getFare = async (pickup, destination, vehicleType = 'car') => {
         throw new Error("Pickup and destination are required to calculate fare");
     }
     const distanceAndTime = await mapService.getDistanceAndTimeService(pickup, destination);
-    console.log(distanceAndTime);
     const rates = fareRates[vehicleType] || fareRates.car;
     const distanceInKm = distanceAndTime.distance.kilometers ;
     const durationInMinutes = distanceAndTime.duration.minutes;
@@ -64,3 +63,4 @@ module.exports.createRide = async ({user, pickup, destination, vehicleType , dis
 }
 
 module.exports.getOTP = getOTP;
+module.exports.getFare = getFare;

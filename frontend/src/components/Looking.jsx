@@ -12,8 +12,8 @@ const LookingForDriver = ({
         "https://tb-static.uber.com/prod/udam-assets/50b5e341-5426-42fd-acfe-037d63333de5.png",
     },
 
-    moto: {
-      name: "Moto",
+    motorcycle: {
+      name: "Motorcycle",
       image:
         "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=552/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NTM4NTEyZC1mZGUxLTRmNzMtYmQ1MS05Y2VmZjRlMjU0ZjEucG5n",
     },
@@ -21,11 +21,12 @@ const LookingForDriver = ({
     auto: {
       name: "Auto",
       image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiYZNGPspo5yDiYR9DP05wsjLh1skE79Jfng&s",
+        "https://tb-static.uber.com/prod/udam-assets/4e718d5c-e431-59c5-acb5-ac40c26c24df.webp",
     },
   };
 
-  const currentVehicle = vehicleData[selectedVehicle];
+
+  const currentVehicle = vehicleData[selectedVehicle] || vehicleData.car;
 
   return (
     <div className="w-full h-full bg-white rounded-t-3xl px-5 py-6 shadow-2xl flex flex-col justify-between">
@@ -34,11 +35,13 @@ const LookingForDriver = ({
       <div className="flex flex-col items-center justify-center flex-1">
 
         {/* Vehicle */}
-        <img
-          src={currentVehicle.image}
-          alt=""
-          className="w-40 h-40 object-contain"
-        />
+     {currentVehicle && (
+  <img
+    src={currentVehicle.image}
+    alt=""
+    className="w-40 h-40 object-contain"
+  />
+)}
 
         {/* Loader */}
         <div className="mt-4">

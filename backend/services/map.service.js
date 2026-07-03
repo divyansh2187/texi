@@ -2,6 +2,8 @@ const mapApi = require("../config/mapApi");
 const axios = require("axios");
 
 
+
+
 const getAddressCoordinates = async (address) => {
     if (!address?.trim()) {
         throw new Error("Address is required");
@@ -36,6 +38,7 @@ const getDistanceAndTimeService = async (
  const originCoords = await getAddressCoordinates(origin);
  const destinationCoords = await getAddressCoordinates(destination);
 
+
  const response = await axios.post(
     "https://api.openrouteservice.org/v2/directions/driving-car",
     {
@@ -66,9 +69,9 @@ const getDistanceAndTimeService = async (
 
     duration: {
         seconds: summary.duration,
-       minutes: Math.ceil(summary.duration / 60)
-    
-    }
+        minutes: Math.ceil(summary.duration / 60)
+    },
+  
   };
 };
 

@@ -5,42 +5,14 @@ import {
   FaLocationArrow,
 } from "react-icons/fa";
 
-const suggestions = [
-  {
-    id: 1,
-    title: "Mayo College",
-    address: "Mayo College Rd, Ajmer",
-    type: "Recent",
-  },
-  {
-    id: 2,
-    title: "Ana Sagar Lake",
-    address: "Vaishali Nagar, Ajmer",
-    type: "Popular",
-  },
-  {
-    id: 3,
-    title: "Ajmer Railway Station",
-    address: "Station Rd, Ajmer",
-    type: "Nearby",
-  },
-  {
-    id: 4,
-    title: "Dargah Sharif",
-    address: "Dargah Bazaar, Ajmer",
-    type: "Popular",
-  },
-  {
-    id: 5,
-    title: "Pushkar Bus Stand",
-    address: "Pushkar Rd, Ajmer",
-    type: "Recent",
-  },
-];
 
-
-
-const Suggestion = ({ vehiclepanel, setvehicalpanel }) => {
+const Suggestion = ( {
+  suggestions,
+  activeField,
+  setPickup,
+  setDestination,
+  setpanelOpen
+}) => {
 
   const [selected, setSelected] = useState(null);
 
@@ -64,15 +36,19 @@ const Suggestion = ({ vehiclepanel, setvehicalpanel }) => {
 
           {suggestions.map((item) => (
             <div
-              key={item.id}
+              key={item.place_id}
               onClick={() => {
-                setSelected(item.id);
-                setvehicalpanel(true);
+                setSelected(item.place_id);
+                if (activeField === "pickup") {
+                  setPickup(item.title);
+                } else if (activeField === "destination") {
+                  setDestination(item.title);
+                }
               }}
               className={`group flex items-center justify-between px-5 py-4 
               transition-all duration-300 cursor-pointer
               ${
-                selected === item.id
+                selected === item.place_id
                   ? "bg-gray-100"
                   : "hover:bg-gray-50"
               }`}
@@ -86,7 +62,7 @@ const Suggestion = ({ vehiclepanel, setvehicalpanel }) => {
                   className={`min-w-[54px] h-[54px] rounded-2xl
                   flex items-center justify-center text-lg transition-all duration-300
                   ${
-                    selected === item.id
+                    selected === item.place_id
                       ? "bg-black text-white"
                       : "bg-gray-100 text-gray-800 group-hover:bg-black group-hover:text-white"
                   }`}
@@ -105,20 +81,8 @@ const Suggestion = ({ vehiclepanel, setvehicalpanel }) => {
                     {item.address}
                   </p>
 
-                  {/* Extra Info */}
-                  <div className="flex items-center gap-3 mt-2 flex-wrap">
-
-                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                      <FaClock className="text-[10px]" />
-                      <span>5 min away</span>
-                    </div>
-
-                    <div className="flex items-center gap-1 text-xs text-gray-400">
-                      <FaLocationArrow className="text-[10px]" />
-                      <span>{item.type}</span>
-                    </div>
-
-                  </div>
+            
+        
                 </div>
               </div>
 
@@ -126,7 +90,7 @@ const Suggestion = ({ vehiclepanel, setvehicalpanel }) => {
               <div
                 className={`w-2.5 h-2.5 rounded-full transition-all duration-300
                 ${
-                  selected === item.id
+                  selected === item.place_id
                     ? "bg-black"
                     : "bg-gray-300 group-hover:bg-black"
                 }`}

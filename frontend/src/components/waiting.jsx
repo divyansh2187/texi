@@ -5,6 +5,7 @@ import {
   FaCircle,
   FaClock,
   FaStar,
+  FaMotorcycle,
 } from "react-icons/fa";
 
 const WaitingForDriver = ({
@@ -26,8 +27,8 @@ const WaitingForDriver = ({
         "https://tb-static.uber.com/prod/udam-assets/50b5e341-5426-42fd-acfe-037d63333de5.png",
     },
 
-    moto: {
-      name: "Moto",
+    motorcycle: {
+      name: "motorcycle",
       number: "RJ 01 XY 2241",
       driver: "Aman Verma",
       otp: "1942",
@@ -51,7 +52,7 @@ const WaitingForDriver = ({
     },
   };
 
-  const currentVehicle = vehicleData[selectedVehicle];
+  const currentVehicle = vehicleData[selectedVehicle] || vehicleData.car;
 
   return (
     <div className="w-full h-full bg-gradient-to-b from-white to-gray-100 rounded-t-[35px] px-4 py-4 shadow-2xl flex flex-col overflow-y-auto">

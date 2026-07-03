@@ -10,39 +10,40 @@ const ConfirmRide = ({
   selectedVehicle,
   pickup,
   destination,
-    setLookingForDriver
+  rideEstimate,
+  setLookingForDriver,
+  handleCreateRide,
+  setvehicalpanel,
 }) => {
   const vehicleData = {
     car: {
       name: "TexiGo",
-      price: "₹193",
+      price: `₹${rideEstimate?.data?.fare?.car ?? "--"}`,
       image:
         "https://tb-static.uber.com/prod/udam-assets/50b5e341-5426-42fd-acfe-037d63333de5.png",
     },
 
-    moto: {
-      name: "Moto",
-      price: "₹89",
+    motorcycle: {
+      name: "Motorcycle",
+      price: `₹${rideEstimate?.data?.fare?.motorcycle ?? "--"}`,
       image:
         "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=552/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NTM4NTEyZC1mZGUxLTRmNzMtYmQ1MS05Y2VmZjRlMjU0ZjEucG5n",
     },
 
     auto: {
       name: "Auto",
-      price: "₹129",
+      price: `₹${rideEstimate?.data?.fare?.auto ?? "--"}`,
       image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiYZNGPspo5yDiYR9DP05wsjLh1skE79Jfng&s",
+        "https://tb-static.uber.com/prod/udam-assets/4e718d5c-e431-59c5-acb5-ac40c26c24df.webp",
     },
   };
 
-  const currentVehicle = vehicleData[selectedVehicle];
+  // Safe fallback
+  const currentVehicle = vehicleData[selectedVehicle] || vehicleData.car;
 
   return (
     <div className="w-full h-full bg-white rounded-t-3xl px-5 py-4 shadow-2xl flex flex-col justify-between overflow-hidden">
-
-      {/* Top Section */}
       <div>
-        
         {/* Header */}
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">
@@ -50,7 +51,10 @@ const ConfirmRide = ({
           </h1>
 
           <button
-            onClick={() => setConfirmRide(false)}
+            onClick={() => {
+              setConfirmRide(false);
+              setvehicalpanel(true);
+            }}
             className="w-10 h-10 rounded-full bg-gray-100 hover:bg-black hover:text-white transition-all duration-300"
           >
             ✕
@@ -59,16 +63,17 @@ const ConfirmRide = ({
 
         {/* Vehicle Image */}
         <div className="w-full flex justify-center -mt-2">
-          <img
-            src={currentVehicle.image}
-            alt=""
-            className="w-32 h-32 object-contain"
-          />
+          {currentVehicle && (
+            <img
+              src={currentVehicle.image}
+              alt={currentVehicle.name}
+              className="w-32 h-32 object-contain"
+            />
+          )}
         </div>
 
         {/* Ride Details */}
         <div className="bg-gray-50 rounded-3xl overflow-hidden border border-gray-200 -mt-2">
-
           {/* Pickup */}
           <div className="flex items-start gap-4 p-3 border-b border-gray-200">
             <FaLocationArrow className="text-black text-lg mt-1" />
@@ -109,17 +114,21 @@ const ConfirmRide = ({
               </h3>
 
               <p className="text-sm font-bold text-gray-900">
-                {currentVehicle.price}
+                {currentVehicle?.price}
               </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom Button */}
+      {/* Confirm Button */}
       <button
-        onClick={() => setLookingForDriver(true)}
-        className="w-full mt-4 bg-green-500 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-green-600 transition-all duration-300">
+        onClick={() => {
+          setLookingForDriver(true);
+          handleCreateRide();
+        }}
+        className="w-full mt-4 bg-green-500 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-green-600 transition-all duration-300"
+      >
         Confirm Booking
       </button>
     </div>

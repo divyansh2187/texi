@@ -1,10 +1,9 @@
 import React from "react";
 import { CiUser } from "react-icons/ci";
-import { useState, useRef,useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { SlArrowDown } from "react-icons/sl";
-
 
 import Suggestion from "../components/Suggestion";
 import VehiclePanel from "../components/VehicalPanel";
@@ -12,7 +11,8 @@ import ConfirmRide from "../components/ConfirmRide";
 import LookingForDriver from "../components/Looking";
 import WaitingForDriver from "../components/waiting";
 import axios from "axios";
-
+import { getRideEstimate } from "../api/map.api";
+import { createRide } from "../api/ride.api";
 
 const Homepage = () => {
   const [pickup, setPickup] = useState("");
@@ -24,7 +24,11 @@ const Homepage = () => {
   const [confirmRide1, setConfirmRide1] = useState(false);
   const [lookingForDriver, setLookingForDriver] = useState(false);
   const [driverFound, setDriverFound] = useState(false);
- 
+  const [suggestions, setSuggestions] = useState([]);
+  const [activeField, setActiveField] = useState(""); // "pickup" or "destination"
+  const [rideEstimate, setRideEstimate] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const panelref = useRef(null);
   const vehicalpanelref = useRef(null);
@@ -32,8 +36,6 @@ const Homepage = () => {
   const confirmrideref = useRef(null);
   const lookingref = useRef(null);
   const waitingref = useRef(null);
-
-
 
   useGSAP(() => {
     if (panelOpen) {
@@ -125,68 +127,116 @@ const Homepage = () => {
     }
   }, [driverFound]);
 
+  useEffect(() => {
+    const value = activeField === "pickup" ? pickup : destination;
 
-useEffect(() => {
-    let watchId;
+    const timer = setTimeout(async () => {
+      if (!value.trim()) {
+        setSuggestions([]);
+        return;
+      }
 
-    const startTracking = () => {
-        if (!navigator.geolocation) {
-            console.log("Geolocation is not supported");
-            return;
-        }
-
-        watchId = navigator.geolocation.watchPosition(
-            async (position) => {
-                const lat = position.coords.latitude;
-                const lng = position.coords.longitude;
-                const accuracy = position.coords.accuracy;
-
-                console.log("GPS:", lat, lng);
-                console.log("Accuracy:", accuracy);
-
-                // Ignore very inaccurate locations
-                if (accuracy > 100) {
-                    console.log("Waiting for better GPS signal...");
-                    return;
-                }
-
-                setCurrentLocation({ lat, lng });
-
-                try {
-                    const response = await axios.get(
-                        `${import.meta.env.VITE_BASEURL}/map/reverse-geocode`,
-                        {
-                            params: { lat, lng },
-                            withCredentials: true,
-                        }
-                    );
-
-                    setPickup(response.data.data.address);
-                } catch (err) {
-                    console.log("Reverse Geocode Error:", err);
-                }
-            },
-            (error) => {
-                console.log("Location Error:", error);
-            },
-            {
-                enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 0,
-            }
+      try {
+        const res = await axios.get(
+          `${import.meta.env.VITE_BASEURL}/map/suggestions`,
+          {
+            params: { input: value },
+            withCredentials: true,
+          },
         );
-    };
 
-    startTracking();
+        setSuggestions(res.data.data);
+      } catch (err) {
+        console.log(err);
+      }
+    }, 400);
 
-    return () => {
-        if (watchId) {
-            navigator.geolocation.clearWatch(watchId);
+    return () => clearTimeout(timer);
+  }, [pickup, destination, activeField]);
+
+  {/* Function to handle getting fare duration and distance */ }
+  const handleFindRide = async () => {
+    try {
+      setLoading(true);
+
+      const estimate = await getRideEstimate(pickup, destination);
+
+      setRideEstimate(estimate);
+
+
+      setvehicalpanel(true);
+    } catch (err) {
+      setError(err.response?.data?.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  {/* Function to handle creating a ride */ }
+  const handleCreateRide = async () => {
+    try {
+      const rideData = {
+        pickup,
+        destination,
+        vehicleType: selectedVehicle,
+        fare: rideEstimate?.data?.fare[selectedVehicle] || 0,
+      };
+      const result = await createRide(rideData);
+      console.log("Ride created successfully:", result);
+    } catch (err) {
+      setError(err.response?.data?.message);
+    }
+  };
+
+
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      console.error("Geolocation is not supported");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude, accuracy } = position.coords;
+
+        console.log("Latitude:", latitude);
+        console.log("Longitude:", longitude);
+        console.log("Accuracy:", accuracy, "meters");
+
+        // Ignore very inaccurate locations
+        if (accuracy > 100) {
+          console.warn("Location accuracy is too low.");
+          return;
         }
-    };
-}, []);
 
+        try {
+          const res = await axios.get(
+            `${import.meta.env.VITE_BASEURL}/map/reverse-geocode`,
+            {
+              params: {
+                lat: latitude,
+                lng: longitude,
+              },
+              withCredentials: true,
+            }
+          );
 
+          setPickup(res.data.data?.address ?? "");
+        } catch (err) {
+          console.error(err);
+        }
+      },
+      (error) => {
+        console.error(error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0,
+      }
+    );
+  }, []);
 
 
   return (
@@ -235,7 +285,10 @@ useEffect(() => {
                 placeholder="add a pickup location"
                 value={pickup}
                 onChange={(e) => setPickup(e.target.value)}
-                onClick={() => setpanelOpen(true)}
+                onClick={() => {
+                  setpanelOpen(true);
+                  setActiveField("pickup");
+                }}
               />
 
               <input
@@ -244,8 +297,27 @@ useEffect(() => {
                 placeholder="enter your destination"
                 value={destination}
                 onChange={(e) => setDestination(e.target.value)}
-                onClick={() => setpanelOpen(true)}
+                onClick={() => {
+                  setpanelOpen(true);
+                  setActiveField("destination");
+                }}
               />
+              <button
+                type="button"
+                disabled={loading}
+                onClick={
+                  () => {
+                    handleFindRide();
+                    setpanelOpen(false);
+                  }
+                }
+                className={`bg-amber-700 text-white p-3 rounded-lg w-full mt-2 ${loading
+                    ? "cursor-not-allowed opacity-50"
+                    : "hover:bg-amber-800 transition-all duration-300"
+                  }`}
+              >
+                {loading ? "Finding..." : "Find a Ride"}
+              </button>
             </form>
           </div>
         </div>
@@ -256,8 +328,11 @@ useEffect(() => {
           className="w-full bg-gray-100 p-1 h-0 overflow-hidden"
         >
           <Suggestion
-            vehiclepanel={vehicalpanel}
-            setvehicalpanel={setvehicalpanel}
+            suggestions={suggestions}
+            activeField={activeField}
+            setPickup={setPickup}
+            setDestination={setDestination}
+            setpanelOpen={setpanelOpen}
           />
         </div>
       </div>
@@ -271,28 +346,52 @@ useEffect(() => {
           setSelectedVehicle={setSelectedVehicle}
           confirmRide={confirmRide1}
           setConfirmRide={setConfirmRide1}
+          rideEstimate={rideEstimate}
+          setpanelOpen={setpanelOpen}
         />
       </div>
-
+      {/* Confirm Ride Panel */}
       <div
         ref={confirmrideref}
         className="fixed w-full h-[52%]  v-[60] z-20 bottom-0 translate-y-full px-3 pb-3 "
       >
-        <ConfirmRide setConfirmRide={setConfirmRide1}
-          selectedVehicle={selectedVehicle} setLookingForDriver={setLookingForDriver} 
-          pickup={pickup} destination={destination} />
+        <ConfirmRide
+          setConfirmRide={setConfirmRide1}
+          selectedVehicle={selectedVehicle}
+          setLookingForDriver={setLookingForDriver}
+          pickup={pickup}
+          destination={destination}
+          rideEstimate={rideEstimate}
+          handleCreateRide={handleCreateRide}
+          setvehicalpanel={setvehicalpanel}
+        />
       </div>
-      <div ref={lookingref} className="w-full translate-y-full h-[52%] fixed v-[60] bottom-0 z-30 px-3 pb-3">
-        <LookingForDriver selectedVehicle={selectedVehicle} setLookingForDriver={setLookingForDriver} />
+
+      {/* Looking For Driver Panel */}
+      <div
+        ref={lookingref}
+        className="w-full translate-y-full h-[52%] fixed v-[60] bottom-0 z-30 px-3 pb-3"
+      >
+        <LookingForDriver
+          selectedVehicle={selectedVehicle}
+          setLookingForDriver={setLookingForDriver}
+        />
       </div>
-      <div  ref={waitingref} className="w-full h-[55%]  fixed v-[60] bottom-0 z-10 px-3 pb-3 ">
-        <WaitingForDriver pickup={pickup} destination={destination} selectedVehicle={selectedVehicle} 
-        setDriverFound={setDriverFound} />
+
+      {/* Waiting For Driver Panel */}
+      <div
+        ref={waitingref}
+        className="w-full h-[55%]  fixed v-[60] bottom-0 z-10 px-3 pb-3 "
+      >
+        <WaitingForDriver
+          pickup={pickup}
+          destination={destination}
+          selectedVehicle={selectedVehicle}
+          setDriverFound={setDriverFound}
+        />
       </div>
     </div>
   );
 };
 
 export default Homepage;
-
-

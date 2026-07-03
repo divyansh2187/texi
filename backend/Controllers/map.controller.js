@@ -1,4 +1,5 @@
 const mapService = require("../services/map.service");
+const fareService = require("../services/fare.service");
 
 
 const getCoordinates = async (req, res) => {
@@ -31,9 +32,10 @@ const getDistanceAndTime = async (req, res) => {
         }
         const result = await mapService.getDistanceAndTimeService(origin, destination);
 
+        const fare = await fareService.calculateFare(result.distance.kilometers, result.duration.minutes);
         return res.status(200).json({
             success: true,
-            data: result,
+            data: { ...result, fare },
         });
         } catch (error) {
         return res.status(400).json({
