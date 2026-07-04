@@ -39,7 +39,7 @@ module.exports.registerCaptain = async(req, res, next) => {
     .status(201)
     .cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production (HTTPS)
+      secure: process.env.NODE_ENV === 'production', // true in production (HTTPS)
       sameSite: "lax",
     })
     .json({ status: "success", captain, token });
@@ -47,41 +47,58 @@ module.exports.registerCaptain = async(req, res, next) => {
 }
 
 
-module.exports.loginCaptain = async(req , res , next)=>{
-    const error = validationResult(req);
+module.exports.loginCaptain = async (req, res, next) => {
+    try {
+        const error = validationResult(req);
 
-    if(!error.isEmpty()){
-      return res.status(400).json({errors : error.array()})
+        if (!error.isEmpty()) {
+            return res.status(400).json({
+                errors: error.array(),
+            });
+        }
+
+        const { email, password } = req.body;
+
+        const captain = await captainModel
+            .findOne({ email })
+            .select("+password");
+
+        if (!captain) {
+            return res.status(401).json({
+                message: "Invalid email or password",
+            });
+        }
+
+        const isMatch = await captain.comparePassword(password);
+
+        if (!isMatch) {
+            return res.status(401).json({
+                message: "Invalid email or password",
+            });
+        }
+
+        const token = captain.generateToken();
+
+        captain.password = undefined;
+
+        res
+            .status(200)
+            .cookie("token", token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            })
+            .json({
+                status: "success",
+                captain,
+                token,
+            });
+    } catch (err) {
+        console.error("Captain login error:", err);
+        next(err); // Passes the error to your global error handler
     }
-
-    const {email , password} = req.body ;
-     
-    const captain = await captainModel.findOne({email}).select('+password');
-
-    if(!captain){
-        return res.status(401).json({message : 'invalid email or password1'})
-    }
-
-    const isMatch = await captain.comparePassword(password);
-
-    if(!isMatch) {
-         return res.status(401).json({message : 'invalid email or password'})
-    }
-
-    const token = captain.generateToken();
-
-    res.cookie('token' , token);
-
-   res
-    .status(200)
-    .cookie("token", token, {
-      httpOnly: true,
-      secure: false, // true in production (HTTPS)
-      sameSite: "lax",
-    })
-    .json({ status: "success", captain, token });
-
-}
+};
 
 
 module.exports.getCaptainProfile = async(req , res , next)=>{

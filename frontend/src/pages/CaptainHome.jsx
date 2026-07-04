@@ -11,11 +11,15 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import POPup from "../components/POPup";
 import ConfirmRidePOP from "../components/confirmridePOP";
+import { useContext } from "react";
+import { CaptainDataContext } from "../context/CaptainContext";
+
 
 const CaptainHome = () => {
+  const { captain } = useContext(CaptainDataContext);
   const [ridePOPup, setridePOPup] = useState(true)
   const [confirmRidePanel, setConfirmRidePanel] = useState(false)
-
+  console.log("Captain in Home:", captain);
 
 
   const ridePOPref = useRef()
@@ -124,8 +128,8 @@ const CaptainHome = () => {
             {/* Details */}
             <div className="min-w-0 ">
 
-              <h1 className="text-lg font-bold text-[#111827] truncate">
-                Captain Alex
+              <h1 className="text-lg font-bold text-[#111827] truncate capitalize">
+                 {captain?.fullname?.firstname} {captain?.fullname?.lastname}
               </h1>
 
               <p className="text-xs text-gray-500">

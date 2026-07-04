@@ -21,7 +21,8 @@ const CaptainLogin = () => {
     try{
       const response = await loginCaptain(CaptainData);
       if(response.status === "success"){
-        setCaptain(response.data);
+        setCaptain(response.captain);
+        console.log("Captain logged in successfully:", response.captain);
         navigate("/CaptainHome");
       }
 
