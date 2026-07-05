@@ -11,5 +11,5 @@ const server = http.createServer(app);
 initializeSocket(server);
 
 server.listen(PORT, () => {
-    console.log(`is working fine ${PORT}`);
+    console.log(`Server is working fine on port ${PORT}`);
 })
