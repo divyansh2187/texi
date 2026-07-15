@@ -92,6 +92,8 @@ const reverseGeocode = async (req, res) => {
     }
 }
 
+
+
 module.exports = {
     getCoordinates,
     getDistanceAndTime,

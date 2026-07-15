@@ -17,6 +17,7 @@ const AuthRedirect = () => {
                await axiosInstance.get("/auth/check");
 
             setRole(response.data.role);
+            console.log("User role:", response.data.role);
 
          } catch (err) {
 

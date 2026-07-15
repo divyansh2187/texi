@@ -13,13 +13,17 @@ import POPup from "../components/POPup";
 import ConfirmRidePOP from "../components/confirmridePOP";
 import { useContext } from "react";
 import { CaptainDataContext } from "../context/CaptainContext";
+import { useEffect } from "react";
+import { SocketContext } from "../context/SocketContext";
+
 
 
 const CaptainHome = () => {
-  const { captain } = useContext(CaptainDataContext);
+  const { captain  } = useContext(CaptainDataContext);
   const [ridePOPup, setridePOPup] = useState(true)
   const [confirmRidePanel, setConfirmRidePanel] = useState(false)
-  console.log("Captain in Home:", captain);
+  const { sendMessage , receiveMessage } = useContext(SocketContext);
+
 
 
   const ridePOPref = useRef()
@@ -58,6 +62,49 @@ const CaptainHome = () => {
   }, [confirmRidePanel]);
 
 
+useEffect(() => {
+    if (!captain?._id) return;
+
+    sendMessage("joinRoom", {
+        userId: captain._id,
+        userType: "captain",
+    });
+
+    const updateCaptainLocation = () => {
+        if (!navigator.geolocation) return;
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                sendMessage("update-location-captain", {
+                    captainId: captain._id,
+                    location: {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    },
+                });
+            },
+            (error) => {
+                console.error("Location error:", error);
+            },
+            {
+                enableHighAccuracy: true,
+            }
+        );
+    };
+
+    // Send immediately
+    updateCaptainLocation();
+
+    // Then every 5 seconds
+    const locationInterval = setInterval(updateCaptainLocation, 5000);
+
+    return () => {
+        clearInterval(locationInterval);
+    };
+}, [captain, sendMessage]);
+
+
+  
 
 
 

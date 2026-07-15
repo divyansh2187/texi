@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { SlArrowDown } from "react-icons/sl";
+import { useContext } from "react";
 
 import Suggestion from "../components/Suggestion";
 import VehiclePanel from "../components/VehicalPanel";
@@ -13,6 +14,9 @@ import WaitingForDriver from "../components/waiting";
 import axios from "axios";
 import { getRideEstimate } from "../api/map.api";
 import { createRide } from "../api/ride.api";
+import { UserDataContext } from "../context/UserContext";
+import { SocketContext } from "../context/SocketContext";
+
 
 const Homepage = () => {
   const [pickup, setPickup] = useState("");
@@ -36,6 +40,9 @@ const Homepage = () => {
   const confirmrideref = useRef(null);
   const lookingref = useRef(null);
   const waitingref = useRef(null);
+  const { User } = useContext(UserDataContext);
+  const { sendMessage , receiveMessage } = useContext(SocketContext);
+
 
   useGSAP(() => {
     if (panelOpen) {
@@ -238,6 +245,18 @@ const Homepage = () => {
     );
   }, []);
 
+
+
+useEffect(() => {
+    if (!User?._id) return;
+
+    console.log("Joining socket:", User._id);
+
+    sendMessage("joinRoom", {
+        userId: User._id,
+        userType: "user",
+    });
+}, [User]);
 
   return (
     <div className="">

@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, { useEffect } from "react";
 import { io } from "socket.io-client";
 import { createContext } from "react";
 
@@ -12,26 +12,36 @@ const socket = io(import.meta.env.VITE_BASEURL, {
 
 const SocketProvider = ({ children }) => {
     useEffect(() => {
-        socket.on("connect", () => {
-            console.log("Connected to socket server");
-        });
+        const onConnect = () => console.log("Connected to socket server");
+        const onDisconnect = () => console.log("Disconnected from socket server");
 
-        socket.on("disconnect", () => {
-            console.log("Disconnected from socket server");
-        });
+        socket.on("connect", onConnect);
+        socket.on("disconnect", onDisconnect);
 
+        return () => {
+            socket.off("connect", onConnect);
+            socket.off("disconnect", onDisconnect);
+        };
     }, []);
 
-    const sendMessage = (eventName , message) => {
+    const sendMessage = (eventName, message) => {
         socket.emit(eventName, message);
     };
 
     const receiveMessage = (eventName, callback) => {
         socket.on(eventName, callback);
+
+        return () => {
+            socket.off(eventName, callback);
+        };
     };
 
     return (
-        <SocketContext.Provider value={{ sendMessage, receiveMessage }}>
+        <SocketContext.Provider value={{
+            socket,
+            sendMessage,
+            receiveMessage
+        }}>
             {children}
         </SocketContext.Provider>
     );

@@ -1,10 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
+import { useContext } from "react";
+import { UserDataContext } from "../context/UserContext";
+
+
+
+
 
 const Protected = ({ children }) => {
 
   const [auth, setAuth] = useState(null);
+  const { user, setUser } = useContext(UserDataContext);
 
   useEffect(() => {
 
@@ -12,8 +19,9 @@ const Protected = ({ children }) => {
 
       try {
 
-        await axiosInstance.get("/users/auth-check");
+        const res = await axiosInstance.get("/users/auth-check");
 
+        setUser(res.data.user);
         setAuth(true);
 
       } catch (err) {

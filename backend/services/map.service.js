@@ -124,10 +124,21 @@ const reverseGeocode = async (lat, lng) => {
 
 };
 
+const getCaptainInRadius = async (ltd , lng , radius)=>{
+    const captains = await captainModel.find({
+        location:{
+            $geoWithin:{
+                $centerSphere:[[ltd ,lng] , radius / 3963.2]
+            }
+        }
+    })
+    return captains;
+}
 
 module.exports = {
     getAddressCoordinates,
     getDistanceAndTimeService,
     getAddressSuggestions,
-    reverseGeocode
+    reverseGeocode,
+    getCaptainInRadius
 };

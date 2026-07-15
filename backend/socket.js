@@ -25,6 +25,41 @@ function initializeSocket(server) {
             }
         });
 
+    socket.on("update-location-captain", async (data) => {
+    try {
+
+        const { captainId, location } = data;
+
+        if (
+            !location ||
+            location.lat == null ||
+            location.lng == null
+        ) {
+            return socket.emit("error", {
+                message: "Invalid location data"
+            });
+        }
+
+        await captainModel.findByIdAndUpdate(captainId, {
+            location: {
+                lat: location.lat,
+                lng: location.lng
+            }
+
+        });
+         console.log(`Updated location for captain ${captainId}:`, location);
+
+    } catch (err) {
+
+        console.error(err);
+
+        socket.emit("error", {
+            message: "Failed to update location"
+        });
+
+    }
+});
+
 
         socket.on("disconnect", () => {
             console.log(`socket disconnected: ${socket.id}`);
