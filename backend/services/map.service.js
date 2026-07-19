@@ -1,5 +1,6 @@
 const mapApi = require("../config/mapApi");
 const axios = require("axios");
+const captainModel = require("../models/CaptianModel");
 
 
 
@@ -124,16 +125,19 @@ const reverseGeocode = async (lat, lng) => {
 
 };
 
-const getCaptainInRadius = async (ltd , lng , radius)=>{
-    const captains = await captainModel.find({
-        location:{
-            $geoWithin:{
-                $centerSphere:[[ltd ,lng] , radius / 3963.2]
+const getCaptainInRadius = async (lat, lon, radius) => {
+    return await captainModel.find({
+        location: {
+            $geoWithin: {
+                $centerSphere: [
+                    [lon, lat],
+                    radius / 6378.1
+                ]
             }
         }
-    })
-    return captains;
-}
+    });
+
+};
 
 module.exports = {
     getAddressCoordinates,

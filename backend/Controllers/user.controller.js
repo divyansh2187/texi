@@ -45,9 +45,12 @@ module.exports.registerUser = async (req, res, next) => {
 
 module.exports.loginUser = async (req, res, next) => {
   const errors = validationResult(req);
-  if (!errors.isEmpty) {
+  if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+
+  console.log(req.body);
+  console.log(errors.array());
 
   const { email, password } = req.body;
 
@@ -69,7 +72,7 @@ module.exports.loginUser = async (req, res, next) => {
     .status(200)
     .cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production (HTTPS)
+      secure: true, // true in production (HTTPS)
       sameSite: "lax",
     })
     .json({ status: "success", user, token });

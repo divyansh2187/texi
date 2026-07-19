@@ -8,7 +8,7 @@ const rideSchema = new mongoose.Schema({
     },
     captainId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Captain'
+        ref: 'captian'
     },
     pickup: {
         type: String,
@@ -16,6 +16,11 @@ const rideSchema = new mongoose.Schema({
     },
     destination: {
         type: String,
+        required: true,
+    },
+    vehicleType: {
+        type: String,
+        enum: ["car", "motorcycle", "auto"],
         required: true,
     },
     fare: {

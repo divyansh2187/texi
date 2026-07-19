@@ -1,8 +1,8 @@
  const express = require('express');
  const router = express.Router();
- const {body} = require('express-validator');
+ const {body , param} = require('express-validator');
 const rideController = require('../controllers/ride.controller');
-const { authUser } = require('../middlewares/auth.middleware');
+const {authUser , authCaptain } = require('../middlewares/auth.middleware');
 
 
  
@@ -15,7 +15,10 @@ router.post('/create',
     rideController.createRide
 )
 
-
+router.post('/:rideId/confirm', authCaptain,
+    param("rideId").isMongoId().withMessage('Invalid ride ID'),
+     rideController.confirmRide,
+)
 
 
 

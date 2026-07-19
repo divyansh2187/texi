@@ -5,60 +5,35 @@ import {
   FaCircle,
   FaClock,
   FaStar,
-  FaMotorcycle,
 } from "react-icons/fa";
 
 const WaitingForDriver = ({
-  selectedVehicle,
-  pickup,
-  destination,
+  ride,
   setDriverFound,
 }) => {
-  const vehicleData = {
-    car: {
-      name: "TexiGo",
-      number: "RJ 01 AB 4587",
-      driver: "Rahul Sharma",
-      otp: "3241",
-      arriving: "2 mins away",
-      rating: "4.9",
-      trips: "324 Trips",
-      image:
-        "https://tb-static.uber.com/prod/udam-assets/50b5e341-5426-42fd-acfe-037d63333de5.png",
-    },
 
-    motorcycle: {
-      name: "motorcycle",
-      number: "RJ 01 XY 2241",
-      driver: "Aman Verma",
-      otp: "1942",
-      arriving: "1 min away",
-      rating: "4.8",
-      trips: "201 Trips",
-      image:
-        "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=552/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NTM4NTEyZC1mZGUxLTRmNzMtYmQ1MS05Y2VmZjRlMjU0ZjEucG5n",
-    },
+  const currentVehicle = {
+    driver: `${ride?.captainId?.fullname?.firstname || ""} ${ride?.captainId?.fullname?.lastname || ""}`,
+    name: ride?.vehicleType || "Car",
+    number: ride?.captainId?.vehicle?.plate || "",
+    otp: ride?.otp || "----",
+    arriving: "2 mins away",
+    rating: "4.9",
+    trips: "324 Trips",
 
-    auto: {
-      name: "Auto",
-      number: "RJ 01 CD 9011",
-      driver: "Imran Khan",
-      otp: "7621",
-      arriving: "3 mins away",
-      rating: "4.7",
-      trips: "178 Trips",
-      image:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiYZNGPspo5yDiYR9DP05wsjLh1skE79Jfng&s",
-    },
+    image:
+      ride?.vehicleType === "car"
+        ? "https://tb-static.uber.com/prod/udam-assets/50b5e341-5426-42fd-acfe-037d63333de5.png"
+        : ride?.vehicleType === "motorcycle"
+        ? "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=552/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NTM4NTEyZC1mZGUxLTRmNzMtYmQ1MS05Y2VmZjRlMjU0ZjEucG5n"
+        : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiYZNGPspo5yDiYR9DP05wsjLh1skE79Jfng&s",
   };
 
-  const currentVehicle = vehicleData[selectedVehicle] || vehicleData.car;
-
   return (
-    <div className="w-full h-full bg-gradient-to-b from-white to-gray-100 rounded-t-[35px] px-4 py-4 shadow-2xl flex flex-col overflow-y-auto">
+    <div className="w-full h-full bg-white rounded-t-[35px] shadow-2xl flex flex-col">
 
       {/* Main Content */}
-      <div className="flex-1">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
 
         {/* Heading */}
         <div className="flex justify-between items-center mb-3">
@@ -86,7 +61,6 @@ const WaitingForDriver = ({
 
           <div className="flex justify-between items-center gap-3">
 
-            {/* Left Side */}
             <div className="flex items-center gap-3">
 
               <div className="bg-gray-100 rounded-2xl p-2">
@@ -98,21 +72,20 @@ const WaitingForDriver = ({
               </div>
 
               <div>
-                <h2 className="text-base font-bold leading-none">
+                <h2 className="text-base font-bold leading-none capitalize">
                   {currentVehicle.driver}
                 </h2>
 
-                <p className="text-gray-500 text-xs mt-1">
+                <p className="text-gray-500 text-xs mt-1 capitalize">
                   {currentVehicle.name}
                 </p>
 
-                <h1 className="text-base font-black mt-2 tracking-wide">
+                <h1 className="text-base font-black mt-2 tracking-wide uppercase">
                   {currentVehicle.number}
                 </h1>
               </div>
             </div>
 
-            {/* Arrival Box */}
             <div className="bg-amber-100 border border-amber-200 px-3 py-2 rounded-2xl flex flex-col items-center min-w-[85px]">
               <FaClock className="text-amber-700 text-sm mb-1" />
 
@@ -151,7 +124,7 @@ const WaitingForDriver = ({
           </div>
         </div>
 
-        {/* OTP Card */}
+        {/* OTP */}
         <div className="w-full bg-black text-white rounded-3xl px-4 py-3 flex justify-between items-center mt-4 shadow-lg">
 
           <div>
@@ -174,7 +147,6 @@ const WaitingForDriver = ({
         {/* Ride Info */}
         <div className="bg-white rounded-3xl overflow-hidden border border-gray-200 mt-4 shadow-sm">
 
-          {/* Pickup */}
           <div className="flex items-start gap-3 p-3 border-b border-gray-100">
 
             <div className="bg-black rounded-full p-2 mt-1">
@@ -187,12 +159,11 @@ const WaitingForDriver = ({
               </h3>
 
               <p className="font-semibold text-xs text-gray-900 break-words">
-                {pickup}
+                {ride?.pickup}
               </p>
             </div>
           </div>
 
-          {/* Destination */}
           <div className="flex items-start gap-3 p-3">
 
             <div className="bg-green-500 rounded-full p-2 mt-1">
@@ -205,11 +176,12 @@ const WaitingForDriver = ({
               </h3>
 
               <p className="font-semibold text-xs text-gray-900 break-words">
-                {destination}
+                {ride?.destination}
               </p>
             </div>
           </div>
         </div>
+
       </div>
 
       {/* Bottom Buttons */}
@@ -220,13 +192,13 @@ const WaitingForDriver = ({
           Call Driver
         </button>
 
-        <button onClick={
-            () => setDriverFound(false)
-          
-        }
-         className="px-5 bg-red-100 text-red-600 rounded-2xl text-sm font-bold">
+        <button
+          onClick={() => setDriverFound(false)}
+          className="px-5 bg-red-100 text-red-600 rounded-2xl text-sm font-bold"
+        >
           Cancel
         </button>
+
       </div>
     </div>
   );

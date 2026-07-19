@@ -6,7 +6,7 @@ import {
   FaClock,
 } from "react-icons/fa";
 
-const POPup = ({ setridePOPup , setConfirmRidePanel }) => {
+const POPup = ({ ride, setridePOPup, confirmRide }) => {
   return (
     <div className="w-full h-full bg-white rounded-t-[32px] px-4 pt-4 shadow-[0_-10px_30px_rgba(0,0,0,0.12)] flex flex-col">
 
@@ -15,20 +15,17 @@ const POPup = ({ setridePOPup , setConfirmRidePanel }) => {
 
       {/* Header */}
       <div className="flex items-center justify-between">
-
         <div>
           <p className="text-xs text-gray-500">
             New Ride Request
           </p>
 
           <h1 className="text-2xl font-bold text-[#111827] mt-1">
-            ₹193
+            ₹{ride?.fare}
           </h1>
         </div>
 
-        {/* Time */}
         <div className="bg-red-100 text-red-500 px-3 py-2 rounded-2xl">
-
           <div className="flex items-center gap-2">
             <FaClock className="text-xs" />
 
@@ -42,29 +39,27 @@ const POPup = ({ setridePOPup , setConfirmRidePanel }) => {
       {/* Rider Info */}
       <div className="mt-5 bg-yellow-50 border border-yellow-100 rounded-3xl p-3 flex items-center gap-3">
 
-        {/* User Img */}
         <img
           className="w-14 h-14 rounded-2xl object-cover"
           src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=400"
           alt=""
         />
 
-        {/* User Details */}
         <div className="flex-1">
-
           <div className="flex items-center justify-between">
 
-            <h2 className="text-base font-bold text-[#111827]">
-              Rahul Sharma
+            <h2 className="text-base font-bold text-[#111827] capitalize">
+              {ride?.userId?.fullname?.firstname}{" "}
+              {ride?.userId?.fullname?.lastname}
             </h2>
 
             <p className="text-xs text-gray-500">
-              2 mins away
+              {ride?.distance} km away
             </p>
           </div>
 
           <p className="text-sm text-gray-500 mt-1">
-            Looking for a quick ride
+            {ride?.userId?.email}
           </p>
         </div>
       </div>
@@ -84,12 +79,8 @@ const POPup = ({ setridePOPup , setConfirmRidePanel }) => {
 
           <div>
             <h2 className="text-sm font-semibold text-[#111827]">
-              Ajmer Railway Station
+              {ride?.pickup}
             </h2>
-
-            <p className="text-xs text-gray-500 mt-1">
-              Civil Lines Ajmer Rajasthan
-            </p>
           </div>
         </div>
       </div>
@@ -109,12 +100,8 @@ const POPup = ({ setridePOPup , setConfirmRidePanel }) => {
 
           <div>
             <h2 className="text-sm font-semibold text-[#111827]">
-              Ana Sagar Lake
+              {ride?.destination}
             </h2>
-
-            <p className="text-xs text-gray-500 mt-1">
-              Near Daulat Bagh Ajmer
-            </p>
           </div>
         </div>
       </div>
@@ -122,11 +109,9 @@ const POPup = ({ setridePOPup , setConfirmRidePanel }) => {
       {/* Ride Details */}
       <div className="grid grid-cols-3 gap-2 mt-4">
 
-        {/* Distance */}
         <div className="bg-[#111827] rounded-2xl py-3 text-center text-white">
-
           <h1 className="text-sm font-bold">
-            4.2 KM
+            {ride?.distance} KM
           </h1>
 
           <p className="text-[10px] text-gray-400 mt-1">
@@ -134,11 +119,9 @@ const POPup = ({ setridePOPup , setConfirmRidePanel }) => {
           </p>
         </div>
 
-        {/* Time */}
         <div className="bg-[#111827] rounded-2xl py-3 text-center text-white">
-
           <h1 className="text-sm font-bold">
-            12 Min
+            {ride?.duration} Min
           </h1>
 
           <p className="text-[10px] text-gray-400 mt-1">
@@ -146,7 +129,6 @@ const POPup = ({ setridePOPup , setConfirmRidePanel }) => {
           </p>
         </div>
 
-        {/* Payment */}
         <div className="bg-[#111827] rounded-2xl py-3 text-center text-white">
 
           <div className="flex items-center justify-center gap-1">
@@ -166,16 +148,20 @@ const POPup = ({ setridePOPup , setConfirmRidePanel }) => {
       {/* Buttons */}
       <div className="flex gap-3 mt-auto pb-4 pt-5">
 
-        {/* Decline */}
-        <button onClick={() => setridePOPup(false)}
-         className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold">
+        <button
+          onClick={() => setridePOPup(false)}
+          className="flex-1 bg-gray-100 text-gray-700 py-3 rounded-2xl font-semibold"
+        >
           Ignore
         </button>
 
-        {/* Accept */}
-        <button onClick={() => {
-             setConfirmRidePanel(true)
-        }} className="flex-1 bg-yellow-400 hover:bg-yellow-300 transition-all text-[#111827] py-3 rounded-2xl font-bold shadow-lg">
+        <button
+          onClick={() => {
+            setridePOPup(false);
+            confirmRide(ride?._id);
+          }}
+          className="flex-1 bg-yellow-400 hover:bg-yellow-300 transition-all text-[#111827] py-3 rounded-2xl font-bold shadow-lg"
+        >
           Accept Ride
         </button>
       </div>

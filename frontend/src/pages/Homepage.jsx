@@ -33,6 +33,9 @@ const Homepage = () => {
   const [rideEstimate, setRideEstimate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [Ride, setRide] = useState(null);
+
+
 
   const panelref = useRef(null);
   const vehicalpanelref = useRef(null);
@@ -196,6 +199,18 @@ const Homepage = () => {
     }
   };
 
+useEffect(() => {
+  const cleanup = receiveMessage("ride-confirmed", (data) => {
+    console.log("Ride confirmed:", data);
+
+    setRide(data.ride);       // note the capital R
+    setLookingForDriver(false);
+    setConfirmRide1(false);
+    setDriverFound(true);
+  });
+
+  return cleanup;
+}, [receiveMessage]);
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -403,9 +418,7 @@ useEffect(() => {
         className="w-full h-[55%]  fixed v-[60] bottom-0 z-10 px-3 pb-3 "
       >
         <WaitingForDriver
-          pickup={pickup}
-          destination={destination}
-          selectedVehicle={selectedVehicle}
+          ride = {Ride}
           setDriverFound={setDriverFound}
         />
       </div>

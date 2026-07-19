@@ -69,13 +69,18 @@ const CaptainSchema = new mongoose.Schema ({
                }
         },
 
-    location:{
-        lat:{
-            type:Number
-        },
-        lng:{
-            type:Number
-        }
+location: {
+    type: {
+        type: String,
+        enum: ["Point"],
+        default: "Point"
+    },
+    coordinates: {
+        type: [Number], // [longitude, latitude]
+        required: true,
+        default: [0, 0]
+    }
+
     }
 
 })
@@ -97,6 +102,8 @@ CaptainSchema.statics.hashPassword = async function(password) {
     return await Bcrypt.hash(password, 10);
 }
 
+
+CaptainSchema.index({ location: "2dsphere" });
 
  const CaptainModel = mongoose.model('captian',CaptainSchema);
 

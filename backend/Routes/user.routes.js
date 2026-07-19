@@ -13,7 +13,7 @@ router.post("/register", [
 
 
 
-router.post("/login", [body("Email").isEmail().withMessage("please enter a valid email"),
+router.post("/login", [body("email").isEmail().withMessage("please enter a valid email"),
     body("password").isLength({ min: 3 }).withMessage("password should be at least 6 characters")
 
 ], userController.loginUser);

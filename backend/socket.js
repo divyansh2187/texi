@@ -41,10 +41,10 @@ function initializeSocket(server) {
         }
 
         await captainModel.findByIdAndUpdate(captainId, {
-            location: {
-                lat: location.lat,
-                lng: location.lng
-            }
+           location: {
+           type: "Point",
+           coordinates: [location.lng, location.lat]
+}
 
         });
          console.log(`Updated location for captain ${captainId}:`, location);
@@ -69,12 +69,12 @@ function initializeSocket(server) {
     
 }
 
-function sendMessageToSocketID(socketId, message) {
+function sendMessageToSocketID(socketId, eventName, data) {
     if (!io) {
         throw new Error("Socket server has not been initialized yet.");
     }
 
-    io.to(socketId).emit("message", message);
+    io.to(socketId).emit(eventName, data);
 }
 
 module.exports = {

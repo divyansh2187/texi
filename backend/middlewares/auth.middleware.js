@@ -40,6 +40,8 @@ module.exports.authUser = async (req, res, next) => {
       process.env.JWT_SECRET
     );
 
+    console.log(decoded);
+
     // ROLE CHECK
     if (decoded.role !== "user") {
 
