@@ -89,7 +89,7 @@ location: {
 CaptainSchema.methods.generateToken = function() {
     const token = jwt.sign({ _id: this._id 
         , role: "captain"
-    }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    }, process.env.JWT_SECRET, { expiresIn: '7d' });
     return token;
 }
 

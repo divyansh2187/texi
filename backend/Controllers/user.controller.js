@@ -39,6 +39,7 @@ module.exports.registerUser = async (req, res, next) => {
       httpOnly: true,
       secure: false, // true in production (HTTPS)
       sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
     })
     .json({ status: "success", user, token });
 };
@@ -74,6 +75,7 @@ module.exports.loginUser = async (req, res, next) => {
       httpOnly: true,
       secure: true, // true in production (HTTPS)
       sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
     })
     .json({ status: "success", user, token });
 };

@@ -10,6 +10,7 @@ import { useState, useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import POPup from "../components/POPup";
+import pickup from "../components/CaptainPickupPOP";
 import ConfirmRidePOP from "../components/confirmridePOP";
 import { useContext } from "react";
 import { CaptainDataContext } from "../context/CaptainContext";
@@ -26,12 +27,14 @@ const CaptainHome = () => {
   const [ridePOPup, setridePOPup] = useState(false)
   const [confirmRidePanel, setConfirmRidePanel] = useState(false)
   const { sendMessage, receiveMessage } = useContext(SocketContext);
+  const [pickupPanel, setPickupPanel] = useState(false)
   const [ride, setride] = useState(null)
 
 
 
   const ridePOPref = useRef()
   const confirmRidePOPref = useRef()
+  const pickupPOPref = useRef()
 
  const confirmRide = async (rideId) => {
   try {
@@ -61,8 +64,26 @@ const CaptainHome = () => {
       }
     }, [ridePOPup]);
 
+
     useGSAP(() => {
-      if (confirmRidePanel) {
+      if (pickupPOPref) {
+        gsap.to(pickupPOPref.current, {
+          y: "0%",
+          duration: 0.5,
+          ease: "power2.out",
+        });
+      } else {
+        gsap.to(pickupPOPref.current, {
+          y: "100%",
+          duration: 0.5,
+          ease: "power2.in",
+        });
+      }
+    }, [pickupPOPref]);
+
+
+      useGSAP(() => {
+      if (confirm) {
         gsap.to(confirmRidePOPref.current, {
           y: "0%",
           duration: 0.5,
@@ -118,6 +139,8 @@ const CaptainHome = () => {
         clearInterval(locationInterval);
       };
     }, [captain, sendMessage]);
+
+  
 
 
     useEffect(() => {
@@ -301,15 +324,16 @@ const CaptainHome = () => {
             ride={ride} />
         </div>
 
-        <div
-          ref={confirmRidePOPref}
-          className="fixed translate-y-full bottom-0 left-0 w-full  z-50"
-        >
-          <ConfirmRidePOP setridePOPup={setridePOPup}
+        <div ref={confirmRidePOPref} className="fixed translate-y-full bottom-0 left-0 w-full  z-50">
+          <pickup setridePOPup={setridePOPup}
             setConfirmRidePanel={setConfirmRidePanel}
             ride={ride} />
-        </div>
 
+       
+        <div ref={pickupPOPref} className="fixed translate-y-full bottom-0 left-0 w-full  z-50">
+          <ConfirmRidePOP setConfirmRidePanel={setConfirmRidePanel}
+            ride={ride} />
+            
 
       </div>
     );

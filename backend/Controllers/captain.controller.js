@@ -41,6 +41,7 @@ module.exports.registerCaptain = async(req, res, next) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // true in production (HTTPS)
       sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
     })
     .json({ status: "success", captain, token });
 
@@ -87,7 +88,7 @@ module.exports.loginCaptain = async (req, res, next) => {
                 httpOnly: true,
                 secure: process.env.NODE_ENV === "production",
                 sameSite: "lax",
-                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
             })
             .json({
                 status: "success",
