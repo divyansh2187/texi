@@ -30,6 +30,7 @@ router.get("/check", async (req, res) => {
 
          const user = await userModel.findById(decoded._id);
          console.log(user);
+         console.log("hi");
 
          return res.json({
             authenticated: true,
