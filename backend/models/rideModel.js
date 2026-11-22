@@ -1,58 +1,73 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const rideSchema = new mongoose.Schema({
-    userId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User',
-        required: true,
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  captainId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "captian",
+  },
+  pickup: {
+    type: String,
+    required: true,
+  },
+  pickupCoordinates: {
+    lat: {
+      type: Number,
+      required: true,
     },
-    captainId: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'captian'
+    lng: {
+      type: Number,
+      required: true,
     },
-    pickup: {
-        type: String,
-        required: true,
-    },
-    destination: {
-        type: String,
-        required: true,
-    },
-    vehicleType: {
-        type: String,
-        enum: ["car", "motorcycle", "auto"],
-        required: true,
-    },
-    fare: {
-        type: Number,
-        required: true,
-    },
-    status: {
-        type: String,
-        enum: ['pending', 'accepted', 'ongoing', 'completed', 'cancelled'],
-        default: 'pending',
-    },
-    duration: {
-        type: Number,
-    },
-    distance: {
-        type: Number,
-    },
-    paymentID: {
-        type: String,
-    },
-    orderId: {
-        type: String,
-    },
-    signature: {
-        type: String,
-    },
-    otp: {
-        type: String,
-        select: false,
-        required: true,
-    },
-})
+  },
+  destination: {
+    type: String,
+    required: true,
+  },
+  vehicleType: {
+    type: String,
+    enum: ["car", "motorcycle", "auto"],
+    required: true,
+  },
+  fare: {
+    type: Number,
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["pending", "accepted", "ongoing", "completed", "cancelled"],
+    default: "pending",
+  },
+  duration: {
+    type: Number,
+  },
+  distance: {
+    type: Number,
+  },
+  paymentID: {
+    type: String,
+  },
+  orderId: {
+    type: String,
+  },
+  signature: {
+    type: String,
+  },
+  otp: {
+    type: String,
+    select: false,
+    required: true,
+  },
+  startedAt: {
+    type: Date,
+  },
+  completedAt: {
+    type: Date,
+  }
+});
 
-
-module.exports = mongoose.model('Ride', rideSchema);
+module.exports = mongoose.model("Ride", rideSchema);

@@ -1,250 +1,471 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import { CaptainDataContext } from "../context/CaptainContext";
+import { SocketContext } from "../context/SocketContext";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Polyline,
+  useMap,
+} from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+const captainIcon = new L.DivIcon({
+  className: "",
+  html: `
+    <div style="
+      width: 42px;
+      height: 42px;
+      background: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px #0005;
+      border: 2px solid #FACC15;
+      font-size: 25px;
+    ">
+      👨‍✈️
+    </div>
+  `,
+  iconSize: [42, 42],
+  iconAnchor: [21, 21],
+});
+
 import {
   FaLocationArrow,
   FaMapMarkerAlt,
   FaMoneyBillWave,
   FaClock,
+  FaUser,
 } from "react-icons/fa";
 import { MdKeyboardArrowUp } from "react-icons/md";
-import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import ConfirmRidePOP from "../components/confirmRidePOP";
+
+
+
+const MapUpdater = ({ captainLocation }) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (captainLocation) {
+      map.setView(
+        [captainLocation.lat, captainLocation.lng],
+        16
+      );
+    }
+  }, [captainLocation, map]);
+
+  return null;
+};
+
+
+
 
 const CaptainRiding = () => {
-  const [showDetails, setShowDetails] = useState(false);
-  const [rideCompleted, setRideCompleted] = useState(false);
+  const { captain } = useContext(CaptainDataContext);
+  const { sendMessage, receiveMessage } = useContext(SocketContext);
+  const location = useLocation();
 
-  const navigate = useNavigate();
+
+  // Get ride data passed from CaptainHome
+  const [ride, setRide] = useState(
+    location.state?.ride?.data || location.state?.ride || {},
+  );
+
+  console.log("RIDE DATA:", ride);
+
+  const [showDetails, setShowDetails] = useState(true);
+  const [showOtpPopup, setShowOtpPopup] = useState(false);
+  const [passengerLocation, setPassengerLocation] = useState(null);
+  const [captainLocation, setCaptainLocation] = useState(null);
+
+
+
+  const [routeCoordinates, setRouteCoordinates] = useState([]);
+
+  const captainLocationRef = useRef(null);
+  const passengerLocationRef = useRef(null);
+
+  const lastRouteRef = useRef({
+    captain: null,
+    passenger: null,
+  });
+
+  captainLocationRef.current = captainLocation;
+  passengerLocationRef.current = passengerLocation;
+
+  console.log("CAPTAIN LOCATION STATE:", captainLocation);
+
+  // Actual backend response uses userId
+  const passengerName = ride?.userId?.fullname
+    ? `${ride.userId.fullname.firstname || ""} ${ride.userId.fullname.lastname || ""}`.trim()
+    : "Passenger";
+
+  const pickup = ride?.pickup || "Pickup location";
+  const destination = ride?.destination || "Destination";
+
+  const fare = ride?.fare;
+  const distance = ride?.distance;
+  const duration = ride?.duration;
+
+
+
+  useEffect(() => {
+    if (!captain?._id) {
+      console.log("Captain ID not available");
+      return;
+    }
+
+    // Register captain's socket connection
+    sendMessage("joinRoom", {
+      userId: captain._id,
+      userType: "captain",
+    });
+
+    if (!navigator.geolocation) {
+      console.error("Geolocation is not supported");
+      return;
+    }
+
+    console.log("Captain live GPS tracking started");
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        setCaptainLocation({
+          lat: latitude,
+          lng: longitude,
+        });
+
+        console.log("Captain GPS:", latitude, longitude);
+        sendMessage("update-location-captain", {
+          captainId: captain._id,
+          rideId: ride?._id,
+          location: {
+            lat: latitude,
+            lng: longitude,
+          },
+        });
+      },
+      (error) => {
+        console.error("Captain GPS error:", error.message);
+      },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 1000,
+        timeout: 15000,
+      }
+    );
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId);
+      console.log("Captain GPS tracking stopped");
+    };
+
+  }, [captain?._id, sendMessage]);
+
+
+  // Receive passenger's live GPS location
+  useEffect(() => {
+    if (!ride?._id) return;
+
+    const cleanup = receiveMessage("user-location-updated", (data) => {
+      console.log("Passenger location event received:", data);
+
+      if (String(data.rideId) !== String(ride._id)) {
+        console.log("Passenger location belongs to another ride");
+        return;
+      }
+
+      setPassengerLocation(data.location);
+
+      console.log("Live passenger location:", data.location);
+    });
+
+    return cleanup;
+  }, [ride?._id, receiveMessage]);
+
+  // Calculate road route between captain and passenger
+  useEffect(() => {
+    let isFetching = false;
+
+    const calculateRoute = async () => {
+      const captainPos = captainLocationRef.current;
+      const passengerPos = passengerLocationRef.current;
+
+      if (!captainPos || !passengerPos || isFetching) return;
+
+      const getDistance = (a, b) => {
+        const toRad = (value) => (value * Math.PI) / 180;
+
+        const dLat = toRad(b.lat - a.lat);
+        const dLng = toRad(b.lng - a.lng);
+
+        const value =
+          Math.sin(dLat / 2) ** 2 +
+          Math.cos(toRad(a.lat)) *
+          Math.cos(toRad(b.lat)) *
+          Math.sin(dLng / 2) ** 2;
+
+        return 6371000 * 2 * Math.atan2(
+          Math.sqrt(value),
+          Math.sqrt(1 - value)
+        );
+      };
+
+      const previous = lastRouteRef.current;
+
+      const hasMoved =
+        !previous.captain ||
+        getDistance(previous.captain, captainPos) >= 30 ||
+        getDistance(previous.passenger, passengerPos) >= 30;
+
+      if (!hasMoved) return;
+
+      isFetching = true;
+
+      try {
+        const url =
+          `https://router.project-osrm.org/route/v1/driving/` +
+          `${captainPos.lng},${captainPos.lat};` +
+          `${passengerPos.lng},${passengerPos.lat}` +
+          `?overview=full&geometries=geojson`;
+
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.code === "Ok" && data.routes?.length > 0) {
+          const coordinates = data.routes[0].geometry.coordinates;
+
+          setRouteCoordinates(
+            coordinates.map(([lng, lat]) => [lat, lng])
+          );
+
+          lastRouteRef.current = {
+            captain: { ...captainPos },
+            passenger: { ...passengerPos },
+          };
+
+          console.log("Road route updated:", coordinates.length, "points");
+        } else {
+          console.error("No road route found:", data.code);
+        }
+      } catch (error) {
+        console.error("Route calculation failed:", error);
+      } finally {
+        isFetching = false;
+      }
+    };
+
+    const timer = setInterval(calculateRoute, 5000);
+
+    calculateRoute();
+
+    return () => clearInterval(timer);
+  }, []);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-black">
+    <div className="relative h-screen w-full overflow-hidden bg-gray-100">
+      {/* Live GPS Map */}
+      <div className="absolute inset-0 z-0">
+        <MapContainer
+          center={[26.100748, 74.294059]}
+          zoom={15}
+          className="w-full h-full"
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {/* Actual road route */}
+          {routeCoordinates.length > 0 && (
+            <Polyline
+              positions={routeCoordinates}
+              pathOptions={{
+                color: "#2563eb",
+                weight: 6,
+                opacity: 0.9,
+              }}
+            />
+          )}
+          <MapUpdater captainLocation={captainLocation} />
 
-      {/* Map */}
-      <img
-        className="w-full h-full object-cover"
-        src="https://miro.medium.com/v2/resize:fit:1400/0*gwMx05pqII5hbfmX.gif"
-        alt=""
-      />
+         {captainLocation && (
+  <Marker
+    position={[captainLocation.lat, captainLocation.lng]}
+    icon={captainIcon}
+  />
+)}
 
-      {/* Top Overlay */}
-      <div className="absolute top-5 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md px-5 py-2 rounded-full">
-        <h1 className="text-white font-semibold text-sm tracking-wide">
-          Ride in Progress
-        </h1>
+          {passengerLocation && (
+            <Marker
+              position={[passengerLocation.lat, passengerLocation.lng]}
+            />
+          )}
+        </MapContainer>
+      </div>
+
+      {/* Status */}
+      {/* Status */}
+      <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10">
+        <div className="bg-black/80 backdrop-blur-md px-6 py-3 rounded-full shadow-lg">
+          <p className="text-white text-sm font-semibold">
+            {ride.status === "ongoing"
+              ? "Ride in Progress"
+              : "Heading to pickup"}
+          </p>
+        </div>
       </div>
 
       {/* Bottom Panel */}
       <div
-        className={`fixed bottom-0 left-0 w-full bg-white rounded-t-[35px] px-5 shadow-2xl transition-all duration-300 overflow-hidden ${
-          showDetails ? "h-fit py-5" : "h-fit py-4"
-        }`}
+        className={`absolute bottom-0 left-0 w-full bg-white rounded-t-[32px] px-5 shadow-2xl transition-all duration-300 ${showDetails ? "py-5" : "py-4"
+          }`}
       >
-
-        {/* Top Row */}
+        {/* Panel Header */}
         <div className="flex items-center justify-between">
-
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              4 KM
+            <h1 className="text-2xl font-bold text-gray-900">
+              Pickup location
             </h1>
 
-            <p className="text-gray-500 text-sm">
-              Away from destination
+            <p className="text-sm text-gray-500 mt-1">
+              Navigate to the passenger
             </p>
           </div>
 
           <button
             onClick={() => setShowDetails(!showDetails)}
-            className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center text-2xl shadow-lg"
+            className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center text-2xl"
           >
             <MdKeyboardArrowUp
-              className={`transition-all duration-300 ${
-                showDetails ? "rotate-180" : ""
-              }`}
+              className={`transition-transform ${showDetails ? "rotate-180" : ""
+                }`}
             />
           </button>
         </div>
 
-        {/* Small Mode */}
+        {/* Collapsed View */}
         {!showDetails && (
-          <button className="w-full mt-4 bg-green-500 text-white py-3 rounded-2xl font-bold shadow-md">
-            Complete Ride
+          <button
+            onClick={() => setShowOtpPopup(true)}
+            className="w-full mt-5 bg-green-600 text-white py-4 rounded-2xl font-bold"
+          >
+            I reached the passenger
           </button>
         )}
 
-        {/* Expanded Details */}
+        {/* Expanded View */}
         {showDetails && (
-          <div className="mt-6">
-
-            {/* Passenger Card */}
-            <div className="flex items-center justify-between bg-gray-100 rounded-3xl p-4">
-
+          <div className="mt-5">
+            {/* Passenger */}
+            <div className="flex items-center justify-between bg-gray-100 rounded-2xl p-4">
               <div className="flex items-center gap-3">
-
-                <img
-                  className="w-14 h-14 rounded-full object-cover border-2 border-white"
-                  src="https://randomuser.me/api/portraits/women/44.jpg"
-                  alt=""
-                />
+                <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
+                  <FaUser className="text-gray-500 text-xl" />
+                </div>
 
                 <div>
-                  <h2 className="font-bold text-lg">
-                    Tanu Sharma
-                  </h2>
+                  <h2 className="font-bold text-gray-900">{passengerName}</h2>
 
-                  <p className="text-sm text-gray-500">
-                    Passenger
-                  </p>
+                  <p className="text-sm text-gray-500">Passenger</p>
                 </div>
               </div>
             </div>
 
-            {/* Ride Info */}
-            <div className="mt-5 flex flex-col gap-4">
-
-              {/* Pickup */}
+            {/* Locations */}
+            <div className="mt-6 flex flex-col gap-5">
               <div className="flex items-start gap-4">
-
                 <div className="bg-green-100 p-3 rounded-full">
                   <FaLocationArrow className="text-green-600" />
                 </div>
 
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    Pickup
-                  </h3>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">Pickup</h3>
 
-                  <p className="text-sm text-gray-500 mt-1">
-                    Ana Sagar Lake Ajmer Rajasthan
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{pickup}</p>
                 </div>
               </div>
 
-              {/* Destination */}
               <div className="flex items-start gap-4">
-
                 <div className="bg-red-100 p-3 rounded-full">
                   <FaMapMarkerAlt className="text-red-500" />
                 </div>
 
-                <div>
-                  <h3 className="font-semibold text-gray-900">
-                    Destination
-                  </h3>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-gray-900">Destination</h3>
 
-                  <p className="text-sm text-gray-500 mt-1">
-                    Mayo College Road Ajmer Rajasthan
-                  </p>
+                  <p className="text-sm text-gray-500 mt-1">{destination}</p>
                 </div>
               </div>
             </div>
 
-            {/* Stats */}
+            {/* Ride information */}
             <div className="grid grid-cols-3 gap-3 mt-6">
-
-              {/* Distance */}
-              <div className="bg-gray-100 rounded-2xl p-4 text-center">
-                <h2 className="text-xl font-bold text-gray-900">
-                  4 KM
+              <div className="bg-gray-100 rounded-2xl p-3 text-center">
+                <h2 className="text-lg font-bold text-gray-900">
+                  {distance ? `${distance} KM` : "--"}
                 </h2>
-
-                <p className="text-xs text-gray-500 mt-1">
-                  Distance
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Distance</p>
               </div>
 
-              {/* Time */}
-              <div className="bg-gray-100 rounded-2xl p-4 text-center">
-
+              <div className="bg-gray-100 rounded-2xl p-3 text-center">
                 <div className="flex justify-center mb-1">
                   <FaClock className="text-gray-700" />
                 </div>
-
-                <h2 className="text-xl font-bold text-gray-900">
-                  8 Min
+                <h2 className="text-lg font-bold text-gray-900">
+                  {duration ? `${duration} min` : "--"}
                 </h2>
-
-                <p className="text-xs text-gray-500 mt-1">
-                  Time
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Duration</p>
               </div>
 
-              {/* Fare */}
-              <div className="bg-gray-100 rounded-2xl p-4 text-center">
-
+              <div className="bg-gray-100 rounded-2xl p-3 text-center">
                 <div className="flex justify-center mb-1">
                   <FaMoneyBillWave className="text-green-600" />
                 </div>
-
-                <h2 className="text-xl font-bold text-gray-900">
-                  ₹193
+                <h2 className="text-lg font-bold text-gray-900">
+                  {fare != null ? `₹${fare}` : "--"}
                 </h2>
-
-                <p className="text-xs text-gray-500 mt-1">
-                  Fare
-                </p>
+                <p className="text-xs text-gray-500 mt-1">Fare</p>
               </div>
             </div>
 
-            {/* Confirmation Check */}
-            <div className="mt-5 bg-gray-100 rounded-2xl p-4 flex items-center justify-between border border-gray-200">
-
-              <div>
-                <h2 className="font-semibold text-gray-900">
-                  Confirm Ride Completion
-                </h2>
-
-                <p className="text-sm text-gray-500 mt-1">
-                  Passenger safely reached destination
-                </p>
-              </div>
-
-              <label className="relative flex items-center cursor-pointer">
-
-                <input
-                  type="checkbox"
-                  checked={rideCompleted}
-                  onChange={() =>
-                    setRideCompleted(!rideCompleted)
-                  }
-                  className="sr-only"
-                />
-
-                <div
-                  className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
-                    rideCompleted
-                      ? "bg-green-500 border-green-500"
-                      : "border-gray-400 bg-white"
-                  }`}
-                >
-                  {rideCompleted && (
-                    <span className="text-white text-sm font-bold">
-                      ✓
-                    </span>
-                  )}
-                </div>
-              </label>
-            </div>
-
-            {/* Complete Ride Button */}
+            {/* Reached passenger */}
             <button
-              disabled={!rideCompleted}
-              onClick={() => {
-                if (rideCompleted) {
-                  navigate("/CaptainHome");
-                }
-              }}
-              className={`w-full mt-6 py-4 rounded-2xl text-lg font-bold shadow-lg transition-all duration-300 ${
-                rideCompleted
-                  ? "bg-green-500 hover:bg-green-600 active:scale-[0.98] text-white"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
+              onClick={() => setShowOtpPopup(true)}
+              className="w-full mt-6 bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition"
             >
-              {rideCompleted
-                ? "Complete Ride"
-                : "Confirm Completion First"}
+              I reached the passenger
             </button>
+
+            <p className="text-center text-xs text-gray-400 mt-3">
+              Verify the passenger's OTP before starting the ride.
+            </p>
           </div>
         )}
       </div>
+
+      {/* OTP Popup */}
+      {showOtpPopup && (
+        <div className="fixed inset-0 z-50 flex items-end bg-black/50">
+          <div className="w-full">
+            <ConfirmRidePOP
+              ride={ride}
+              setridePOPup={setShowOtpPopup}
+              setConfirmRidePanel={setShowOtpPopup}
+              onRideStarted={(updatedRide) => {
+                setRide(updatedRide);
+                setShowOtpPopup(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

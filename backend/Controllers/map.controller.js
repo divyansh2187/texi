@@ -93,10 +93,41 @@ const reverseGeocode = async (req, res) => {
 }
 
 
+const getCaptainRoute = async (req, res) => {
+  try {
+    const {
+      originLat,
+      originLng,
+      destinationLat,
+      destinationLng,
+    } = req.query;
+
+    const result = await mapService.getRouteBetweenCoordinates(
+      Number(originLat),
+      Number(originLng),
+      Number(destinationLat),
+      Number(destinationLng)
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    return res.status(400).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+
+
 
 module.exports = {
     getCoordinates,
     getDistanceAndTime,
     getAddressSuggestions,
-    reverseGeocode
+    reverseGeocode,
+    getCaptainRoute
 };

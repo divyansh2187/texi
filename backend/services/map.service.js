@@ -31,50 +31,139 @@ const getAddressCoordinates = async (address) => {
 };
 
 
-const getDistanceAndTimeService = async (
-  origin,
-  destination
+
+const getDistanceAndTimeService = async (origin, destination) => {
+    const originCoords = await getAddressCoordinates(origin);
+    const destinationCoords = await getAddressCoordinates(destination);
+
+    const response = await axios.post(
+        "https://api.openrouteservice.org/v2/directions/driving-car/geojson",
+        {
+            coordinates: [
+                [originCoords.lon, originCoords.lat],
+                [destinationCoords.lon, destinationCoords.lat],
+            ],
+        },
+        {
+            headers: {
+                Authorization: process.env.ORS_API_KEY,
+                "Content-Type": "application/json",
+                Accept: "application/geo+json",
+            },
+        }
+    );
+
+    const route = response.data.features?.[0];
+
+    if (!route) {
+        throw new Error("No route found between the specified locations");
+    }
+
+    const summary = route.properties.summary;
+
+    // ORS returns [longitude, latitude].
+    // Leaflet expects [latitude, longitude].
+    const routeCoordinates = route.geometry.coordinates.map(
+        ([longitude, latitude]) => [latitude, longitude]
+    );
+
+
+    return {
+        distance: {
+            meters: summary.distance,
+            kilometers: (summary.distance / 1000).toFixed(2),
+        },
+
+        duration: {
+            seconds: summary.duration,
+            minutes: Math.ceil(summary.duration / 60),
+        },
+
+        pickupCoordinates: {
+            lat: originCoords.lat,
+            lng: originCoords.lon,
+        },
+
+        destinationCoordinates: {
+            lat: destinationCoords.lat,
+            lng: destinationCoords.lon,
+        },
+
+        routeCoordinates,
+    };
+
+};
+
+
+
+const getRouteBetweenCoordinates = async (
+  originLat,
+  originLng,
+  destinationLat,
+  destinationLng
 ) => {
+  const coordinates = [
+    originLat,
+    originLng,
+    destinationLat,
+    destinationLng,
+  ];
 
- const originCoords = await getAddressCoordinates(origin);
- const destinationCoords = await getAddressCoordinates(destination);
+  if (
+    coordinates.some((value) => !Number.isFinite(Number(value))) ||
+    Number(originLat) < -90 ||
+    Number(originLat) > 90 ||
+    Number(destinationLat) < -90 ||
+    Number(destinationLat) > 90 ||
+    Number(originLng) < -180 ||
+    Number(originLng) > 180 ||
+    Number(destinationLng) < -180 ||
+    Number(destinationLng) > 180
+  ) {
+    throw new Error("Valid GPS coordinates are required");
+  }
 
-
- const response = await axios.post(
-    "https://api.openrouteservice.org/v2/directions/driving-car",
+  const response = await axios.post(
+    "https://api.openrouteservice.org/v2/directions/driving-car/geojson",
     {
-        coordinates: [
-            [originCoords.lon, originCoords.lat],
-            [destinationCoords.lon, destinationCoords.lat]
-        ]
+      coordinates: [
+        [Number(originLng), Number(originLat)],
+        [Number(destinationLng), Number(destinationLat)],
+      ],
     },
     {
-        headers: {
-            Authorization: process.env.ORS_API_KEY,
-            "Content-Type": "application/json"
-        }
+      headers: {
+        Authorization: process.env.ORS_API_KEY,
+        "Content-Type": "application/json",
+        Accept: "application/geo+json",
+      },
     }
-);
-  
-  const routes = response.data.routes[0];
-   if (!routes) {
-    throw new Error("No route found between the specified locations");
-    }
-  const summary = routes.summary
+  );
+
+  const route = response.data.features?.[0];
+
+  if (!route) {
+    throw new Error("No route found");
+  }
+
+  const summary = route.properties.summary;
 
   return {
     distance: {
-        meters: summary.distance,
-        kilometers: (summary.distance / 1000).toFixed(2)
+      meters: summary.distance,
+      kilometers: (summary.distance / 1000).toFixed(2),
     },
-
     duration: {
-        seconds: summary.duration,
-        minutes: Math.ceil(summary.duration / 60)
+      seconds: summary.duration,
+      minutes: Math.ceil(summary.duration / 60),
     },
-  
+    routeCoordinates: route.geometry.coordinates.map(
+      ([longitude, latitude]) => [latitude, longitude]
+    ),
   };
 };
+
+
 
 const getAddressSuggestions = async (input) => {
     if (!input || !input.trim()) {
@@ -92,7 +181,7 @@ const getAddressSuggestions = async (input) => {
     });
 
     return response.data.map((item) => ({
-        place_id: item.place_id, 
+        place_id: item.place_id,
         title: item.display_name,
         type: item.type,
 
@@ -144,5 +233,6 @@ module.exports = {
     getDistanceAndTimeService,
     getAddressSuggestions,
     reverseGeocode,
-    getCaptainInRadius
+    getCaptainInRadius,
+    getRouteBetweenCoordinates
 };

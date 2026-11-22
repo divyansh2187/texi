@@ -34,7 +34,7 @@ const formatDuration = (minutes) => {
   return (
     <div
       ref={vehicalpanelref}
-      className="w-full fixed bottom-0 left-0 bg-white rounded-t-3xl px-3 py-6 shadow-2xl translate-y-full"
+      className="w-full fixed bottom-0 left-0 z-20 bg-white rounded-t-3xl px-3 py-6 shadow-2xl translate-y-full"
     >
       {/* Top Area */}
       <div className="relative mb-6 bg-amber-200 flex justify-between items-center px-5 py-4 rounded-2xl">

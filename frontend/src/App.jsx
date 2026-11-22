@@ -14,6 +14,7 @@ import CaptainHome from "./pages/CaptainHome";
 import AuthRedirect from "./components/AuthRedirect";
 import Riding from "./pages/Riding";
 import CaptainRiding from "./pages/CaptainRiding";
+import CaptainOngoingRide from "./pages/CaptainOngoingRide";
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
 
       <Route path="/CaptainHome" element={<CaptainProtected> <CaptainHome /></CaptainProtected>} />
       <Route path="/captain-Riding" element={<CaptainProtected> <CaptainRiding /></CaptainProtected> }/>
+      <Route path="/captain-OngoingRide" element={<CaptainProtected> <CaptainOngoingRide /></CaptainProtected> }/>
 
     </Routes>
   );

@@ -20,6 +20,26 @@ router.post('/:rideId/confirm', authCaptain,
      rideController.confirmRide,
 )
 
+router.post(
+    '/:rideId/start',
+    authCaptain,
+    param("rideId").isMongoId().withMessage("Invalid ride ID"),
+    body("otp")
+        .isString()
+        .matches(/^\d{4}$/)
+        .withMessage("OTP must be exactly 4 digits"),
+    rideController.startRide
+);
+
+
+router.post(
+    '/:rideId/complete',
+    authCaptain,
+    param("rideId").isMongoId().withMessage("Invalid ride ID"),
+    rideController.completeRide
+);
+
+
 
 
 

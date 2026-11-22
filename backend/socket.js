@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 const userModel = require("./models/UserModel");
 const captainModel = require("./models/CaptianModel");
+const rideModel = require("./models/rideModel");
 
 let io;
 
@@ -25,40 +26,121 @@ function initializeSocket(server) {
             }
         });
 
-    socket.on("update-location-captain", async (data) => {
-    try {
+        socket.on("update-location-captain", async (data) => {
+            try {
+                const { captainId, rideId, location } = data;
 
-        const { captainId, location } = data;
+                if (!captainId || !rideId || !location ||
+                    location.lat == null || location.lng == null) {
+                    return socket.emit("error", {
+                        message: "Invalid location data",
+                    });
+                }
+
+                // 1. Update captain location in MongoDB
+                await captainModel.findByIdAndUpdate(captainId, {
+                    location: {
+                        type: "Point",
+                        coordinates: [location.lng, location.lat],
+                    },
+                });
+
+                // 2. Find captain's accepted or ongoing ride
+                const activeRide = await rideModel.findOne({
+                    _id: rideId,
+                    captainId,
+                    status: { $in: ["accepted", "ongoing"] },
+                }).select("userId captainId status");
+
+                // 3. Send location only to the assigned passenger
+                if (activeRide) {
+                    const passenger = await userModel
+                        .findById(activeRide.userId)
+                        .select("socketId");
+                    console.log("Active ride found:", activeRide._id);
+                    console.log("Passenger socket ID:", passenger?.socketId);
+
+                    if (passenger?.socketId) {
+                        io.to(passenger.socketId).emit("captain-location-updated", {
+                            rideId: activeRide._id,
+                            captainId,
+                            location: {
+                                lat: Number(location.lat),
+                                lng: Number(location.lng),
+                            },
+                        });
+                    }
+
+                    else {
+                        console.log("Passenger socket not connected or socketId missing");
+                    }
+                }
+
+                console.log("Captain location updated:", location);
+            } catch (err) {
+                console.error("Captain location update error:", err);
+
+                socket.emit("error", {
+                    message: "Failed to update location",
+                });
+            }
+        });
+
+
+        socket.on("update-location-user", async (data) => {
+    try {
+        const { userId, rideId, location } = data;
 
         if (
+            !userId ||
+            !rideId ||
             !location ||
             location.lat == null ||
             location.lng == null
         ) {
             return socket.emit("error", {
-                message: "Invalid location data"
+                message: "Invalid passenger location data",
             });
         }
 
-        await captainModel.findByIdAndUpdate(captainId, {
-           location: {
-           type: "Point",
-           coordinates: [location.lng, location.lat]
-}
+        // Verify that this passenger belongs to this active ride
+        const activeRide = await rideModel.findOne({
+            _id: rideId,
+            userId,
+            status: { $in: ["accepted", "ongoing"] },
+        }).select("userId captainId status");
 
-        });
-         console.log(`Updated location for captain ${captainId}:`, location);
+        if (!activeRide) {
+            return;
+        }
+
+        // Find the assigned captain
+        const captain = await captainModel
+            .findById(activeRide.captainId)
+            .select("socketId");
+
+        if (captain?.socketId) {
+            io.to(captain.socketId).emit("user-location-updated", {
+                rideId: activeRide._id,
+                userId,
+                location: {
+                    lat: Number(location.lat),
+                    lng: Number(location.lng),
+                },
+            });
+
+            console.log("Passenger location sent to captain:", location);
+        }
 
     } catch (err) {
-
-        console.error(err);
+        console.error("Passenger location update error:", err);
 
         socket.emit("error", {
-            message: "Failed to update location"
+            message: "Failed to update passenger location",
         });
-
     }
 });
+
 
 
         socket.on("disconnect", () => {
@@ -66,7 +148,7 @@ function initializeSocket(server) {
         });
     });
 
-    
+
 }
 
 function sendMessageToSocketID(socketId, eventName, data) {

@@ -23,4 +23,6 @@ router.get("/suggestions",mapController.getAddressSuggestions);
 
 router.get("/reverse-geocode", mapController.reverseGeocode);
 
+router.get("/captain-route", mapController.getCaptainRoute);
+
 module.exports = router;
