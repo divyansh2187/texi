@@ -12,6 +12,7 @@ module.exports.createRide = async (req, res) => {
             pickup: req.body.pickup,
             pickupCoordinates: req.body.pickupCoordinates,
             destination: req.body.destination,
+            destinationCoordinates: req.body.destinationCoordinates,
             vehicleType: req.body.vehicleType
         });
         return res.status(201).json({ success: true, data: ride });

@@ -25,8 +25,8 @@ const getDistanceInMeters = (point1, point2) => {
   const a =
     Math.sin(deltaLat / 2) ** 2 +
     Math.cos(lat1) *
-      Math.cos(lat2) *
-      Math.sin(deltaLng / 2) ** 2;
+    Math.cos(lat2) *
+    Math.sin(deltaLng / 2) ** 2;
 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
@@ -46,9 +46,12 @@ const Riding = ({
 
   const [captainLocation, setCaptainLocation] = useState(null);
   const [routeCoordinates, setRouteCoordinates] = useState([]);
+  const [remainingDistance, setRemainingDistance] = useState(null);
+  const [remainingDuration, setRemainingDuration] = useState(null);
 
   const lastRouteRequest = useRef(null);
   const isFetchingRoute = useRef(false);
+  const previousRideStage = useRef(rideStage);
 
   const vehicleNames = {
     car: "TexiGo",
@@ -72,8 +75,8 @@ const Riding = ({
     selectedVehicle === "car"
       ? "https://tb-static.uber.com/prod/udam-assets/50b5e341-5426-42fd-acfe-037d63333de5.png"
       : selectedVehicle === "motorcycle" || selectedVehicle === "moto"
-      ? "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=552/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NTM4NTEyZC1mZGUxLTRmNzMtYmQ1MS05Y2VmZjRlMjU0ZjEucG5n"
-      : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiYZNGPspo5yDiYR9DP05wsjLh1skE79Jfng&s";
+        ? "https://cn-geo1.uber.com/image-proc/crop/resizecrop/udam/format=auto/width=552/height=552/srcb64=aHR0cHM6Ly90Yi1zdGF0aWMudWJlci5jb20vcHJvZC91ZGFtLWFzc2V0cy85NTM4NTEyZC1mZGUxLTRmNzMtYmQ1MS05Y2VmZjRlMjU0ZjEucG5n"
+        : "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTiYZNGPspo5yDiYR9DP05wsjLh1skE79Jfng&s";
 
   // Receive captain's live location
   useEffect(() => {
@@ -88,12 +91,19 @@ const Riding = ({
     return cleanup;
   }, [ride?._id, receiveMessage]);
 
-  // Calculate live road route
+
+  // Calculate live road route based on ride stage
   useEffect(() => {
     let cancelled = false;
 
+    // Reset route tracking when ride stage changes
+    if (previousRideStage.current !== rideStage) {
+      lastRouteRequest.current = null;
+      previousRideStage.current = rideStage;
+    }
+
     const calculateRoute = async (origin, destinationPoint) => {
-      if (isFetchingRoute.current) return;
+      if (!origin || !destinationPoint || isFetchingRoute.current) return;
 
       isFetchingRoute.current = true;
 
@@ -105,14 +115,17 @@ const Riding = ({
         if (result.success) {
           setRouteCoordinates(result.data.routeCoordinates || []);
 
+          setRemainingDistance(result.data.distance?.kilometers ?? null);
+          setRemainingDuration(result.data.duration?.minutes ?? null);
+
           lastRouteRequest.current = {
-            location: origin,
+            location: { ...origin },
             time: Date.now(),
           };
         }
       } catch (error) {
         console.error(
-          "Captain route calculation error:",
+          "Route calculation error:",
           error.response?.data?.message || error.message
         );
       } finally {
@@ -120,32 +133,33 @@ const Riding = ({
       }
     };
 
-    if (rideStage === "ongoing") {
-      lastRouteRequest.current = null;
+    let origin = null;
+    let target = null;
 
-      if (pickupCoordinates && destinationCoordinates) {
-        calculateRoute(pickupCoordinates, destinationCoordinates);
-      }
-    } else if (
-      rideStage === "accepted" &&
-      captainLocation &&
-      passengerLocation
-    ) {
-      const now = Date.now();
+    if (rideStage === "accepted") {
+      // Captain → Passenger
+      origin = captainLocation;
+      target = passengerLocation;
+    } else if (rideStage === "ongoing") {
+      // Passenger → Destination
+      origin = passengerLocation;
+      target = destinationCoordinates;
+    }
+
+    if (origin && target) {
       const previous = lastRouteRequest.current;
+      const now = Date.now();
 
       if (!previous) {
-        calculateRoute(captainLocation, passengerLocation);
+        calculateRoute(origin, target);
       } else {
         const distanceMoved = getDistanceInMeters(
           previous.location,
-          captainLocation
+          origin
         );
 
-        const timePassed = now - previous.time;
-
-        if (distanceMoved >= 60 && timePassed >= 10000) {
-          calculateRoute(captainLocation, passengerLocation);
+        if (distanceMoved >= 60 && now - previous.time >= 10000) {
+          calculateRoute(origin, target);
         }
       }
     }
@@ -156,10 +170,10 @@ const Riding = ({
   }, [
     captainLocation,
     passengerLocation,
-    pickupCoordinates,
     destinationCoordinates,
     rideStage,
   ]);
+
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gray-100">
@@ -167,15 +181,55 @@ const Riding = ({
       {/* Live Map */}
       <div className="absolute inset-0 z-0">
         <RideMap
-          currentLocation={captainLocation}
-          passengerLocation={passengerLocation}
-          isCaptainLocation={true}
+          currentLocation={
+            rideStage === "ongoing"
+              ? passengerLocation
+              : captainLocation
+          }
+          passengerLocation={
+            rideStage === "accepted" ? passengerLocation : null
+          }
+          captainLocation={captainLocation}
+          isCaptainLocation={rideStage === "accepted"}
           pickupCoordinates={pickupCoordinates}
           destinationCoordinates={destinationCoordinates}
           routeCoordinates={routeCoordinates}
           rideStage={rideStage}
         />
       </div>
+
+      {/* Live Navigation Information */}
+      {rideStage === "ongoing" && (
+        <div className="absolute top-20 left-4 right-4 z-20">
+          <div className="bg-white rounded-2xl shadow-xl p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-gray-500 font-medium">
+                Remaining distance
+              </p>
+
+              <h2 className="text-2xl font-bold text-gray-900">
+                {remainingDistance !== null
+                  ? `${remainingDistance} km`
+                  : "Calculating..."}
+              </h2>
+            </div>
+
+            <div className="h-10 w-px bg-gray-200" />
+
+            <div>
+              <p className="text-xs text-gray-500 font-medium">
+                Estimated arrival
+              </p>
+
+              <h2 className="text-2xl font-bold text-green-600">
+                {remainingDuration !== null
+                  ? `${remainingDuration} min`
+                  : "Calculating..."}
+              </h2>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Ride Status */}
       <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/85 backdrop-blur-md px-5 py-3 rounded-full flex items-center gap-3 shadow-xl whitespace-nowrap">

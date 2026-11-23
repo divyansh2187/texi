@@ -12,6 +12,7 @@
   "dependencies": {
     "@gsap/react": "^2.1.2",
     "@tailwindcss/vite": "^4.2.1",
+    "@tomickigrzegorz/leaflet-rotate": "^0.3.0",
     "axios": "^1.13.6",
     "framer-motion": "^12.39.0",
     "gsap": "^3.15.0",

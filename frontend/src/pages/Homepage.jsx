@@ -18,7 +18,7 @@ import { createRide } from "../api/ride.api";
 import { UserDataContext } from "../context/UserContext";
 import { SocketContext } from "../context/SocketContext";
 
-import Riding from "../pages/Riding";
+import Riding from "./Riding";
 import RideMap from "../components/RideMap";
 
 const Homepage = () => {
@@ -179,35 +179,39 @@ const Homepage = () => {
   };
 
   // Create ride
- // Create ride
-const handleCreateRide = async () => {
-  try {
-    if (!currentLocation) {
-      setError("Your GPS location is not available. Please allow location access.");
-      return;
+  // Create ride
+  const handleCreateRide = async () => {
+    try {
+      if (!currentLocation) {
+        setError("Your GPS location is not available. Please allow location access.");
+        return;
+      }
+
+      const rideData = {
+        pickup,
+        pickupCoordinates: {
+          lat: currentLocation.lat,
+          lng: currentLocation.lng,
+        },
+        destination,
+        destinationCoordinates: {
+          lat: Number(rideEstimate?.data?.destinationCoordinates?.lat),
+          lng: Number(rideEstimate?.data?.destinationCoordinates?.lng),
+        },
+        vehicleType: selectedVehicle,
+        fare: rideEstimate?.data?.fare[selectedVehicle] || 0,
+      };
+
+      console.log("Sending ride data:", rideData);
+
+      const result = await createRide(rideData);
+
+      console.log("Ride created successfully:", result);
+    } catch (err) {
+      console.error("Create ride error:", err.response?.data || err);
+      setError(err.response?.data?.message || "Failed to create ride");
     }
-
-    const rideData = {
-      pickup,
-      pickupCoordinates: {
-        lat: currentLocation.lat,
-        lng: currentLocation.lng,
-      },
-      destination,
-      vehicleType: selectedVehicle,
-      fare: rideEstimate?.data?.fare[selectedVehicle] || 0,
-    };
-
-    console.log("Sending ride data:", rideData);
-
-    const result = await createRide(rideData);
-
-    console.log("Ride created successfully:", result);
-  } catch (err) {
-    console.error("Create ride error:", err.response?.data || err);
-    setError(err.response?.data?.message || "Failed to create ride");
-  }
-};
+  };
 
   // Passenger receives ride confirmation
   useEffect(() => {
@@ -322,31 +326,31 @@ const handleCreateRide = async () => {
 
 
 
-// Share passenger live GPS with assigned captain
-useEffect(() => {
-  if (
-    rideStage !== "accepted" &&
-    rideStage !== "ongoing"
-  ) {
-    return;
-  }
+  // Share passenger live GPS with assigned captain
+  useEffect(() => {
+    if (
+      rideStage !== "accepted" &&
+      rideStage !== "ongoing"
+    ) {
+      return;
+    }
 
-  if (!Ride?._id || !User?._id || !currentLocation) {
-    return;
-  }
+    if (!Ride?._id || !User?._id || !currentLocation) {
+      return;
+    }
 
-  console.log("Sharing passenger GPS:", currentLocation);
+    console.log("Sharing passenger GPS:", currentLocation);
 
-  sendMessage("update-location-user", {
-    userId: User._id,
-    rideId: Ride._id,
-    location: {
-      lat: currentLocation.lat,
-      lng: currentLocation.lng,
-    },
-  });
+    sendMessage("update-location-user", {
+      userId: User._id,
+      rideId: Ride._id,
+      location: {
+        lat: currentLocation.lat,
+        lng: currentLocation.lng,
+      },
+    });
 
-}, [rideStage, Ride?._id, User?._id, currentLocation, sendMessage]);
+  }, [rideStage, Ride?._id, User?._id, currentLocation, sendMessage]);
 
 
 
@@ -354,20 +358,23 @@ useEffect(() => {
   // IMPORTANT: RENDER ONLY RIDING SCREEN AFTER ACCEPTANCE
   // =====================================================
 
-if (rideStage === "accepted" || rideStage === "ongoing") {
-  return (
-    <Riding
-      pickup={Ride?.pickup}
-      destination={Ride?.destination}
-      selectedVehicle={Ride?.vehicleType}
-      ride={Ride}
-      rideStage={rideStage}
-      pickupCoordinates={Ride?.pickupCoordinates || rideEstimate?.data?.pickupCoordinates}
-      destinationCoordinates={rideEstimate?.data?.destinationCoordinates}
-      passengerLocation={currentLocation}
-    />
-  );
-}
+  if (rideStage === "accepted" || rideStage === "ongoing") {
+    return (
+      <Riding
+        pickup={Ride?.pickup}
+        destination={Ride?.destination}
+        selectedVehicle={Ride?.vehicleType}
+        ride={Ride}
+        rideStage={rideStage}
+        pickupCoordinates={Ride?.pickupCoordinates || rideEstimate?.data?.pickupCoordinates}
+        destinationCoordinates={
+          Ride?.destinationCoordinates ||
+          rideEstimate?.data?.destinationCoordinates
+        }
+        passengerLocation={currentLocation}
+      />
+    );
+  }
 
   // =====================================================
   // RIDE COMPLETED SCREEN
@@ -518,11 +525,10 @@ if (rideStage === "accepted" || rideStage === "ongoing") {
                   handleFindRide();
                   setpanelOpen(false);
                 }}
-                className={`bg-amber-700 text-white p-3 rounded-lg w-full mt-2 ${
-                  loading
-                    ? "cursor-not-allowed opacity-50"
-                    : "hover:bg-amber-800 transition-all duration-300"
-                }`}
+                className={`bg-amber-700 text-white p-3 rounded-lg w-full mt-2 ${loading
+                  ? "cursor-not-allowed opacity-50"
+                  : "hover:bg-amber-800 transition-all duration-300"
+                  }`}
               >
                 {loading ? "Finding..." : "Find a Ride"}
               </button>
@@ -589,7 +595,7 @@ if (rideStage === "accepted" || rideStage === "ongoing") {
         />
       </div>
 
-  
+
     </div>
   );
 };

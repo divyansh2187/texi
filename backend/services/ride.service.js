@@ -50,6 +50,7 @@ module.exports.createRide = async ({
     pickup,
     pickupCoordinates,
     destination,
+    destinationCoordinates,
     vehicleType,
     distance,
     duration,
@@ -70,6 +71,18 @@ module.exports.createRide = async ({
         ) {
             throw new Error("Valid passenger GPS coordinates are required");
         }
+
+        if (
+            !destinationCoordinates ||
+            !Number.isFinite(Number(destinationCoordinates.lat)) ||
+            !Number.isFinite(Number(destinationCoordinates.lng)) ||
+            Number(destinationCoordinates.lat) < -90 ||
+            Number(destinationCoordinates.lat) > 90 ||
+            Number(destinationCoordinates.lng) < -180 ||
+            Number(destinationCoordinates.lng) > 180
+        ) {
+            throw new Error("Invalid destination coordinates");
+        }
         const fare = await getFare(pickup, destination, vehicleType);
 
         const newRide = await rideModel.create({
@@ -85,6 +98,10 @@ module.exports.createRide = async ({
                 lat: Number(pickupCoordinates.lat),
                 lng: Number(pickupCoordinates.lng),
             },
+            destinationCoordinates: {
+                lat: Number(destinationCoordinates.lat),
+                lng: Number(destinationCoordinates.lng),
+            },
         });
 
         delete newRide.otp;
@@ -93,10 +110,10 @@ module.exports.createRide = async ({
 
         try {
             captains = await mapService.getCaptainInRadius(
-  Number(pickupCoordinates.lat),
-  Number(pickupCoordinates.lng),
-  5,
-);
+                Number(pickupCoordinates.lat),
+                Number(pickupCoordinates.lng),
+                5,
+            );
 
             captains = captains.filter(
                 captain => captain.vehicle.vehicleType === vehicleType

@@ -10,6 +10,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { getCaptainRoute } from "../api/map.api";
 
 const captainIcon = new L.DivIcon({
   className: "",
@@ -81,6 +82,8 @@ const CaptainRiding = () => {
   const [showOtpPopup, setShowOtpPopup] = useState(false);
   const [passengerLocation, setPassengerLocation] = useState(null);
   const [captainLocation, setCaptainLocation] = useState(null);
+  const [remainingDistance, setRemainingDistance] = useState(null);
+  const [remainingDuration, setRemainingDuration] = useState(null);
 
 
 
@@ -190,70 +193,92 @@ const CaptainRiding = () => {
     return cleanup;
   }, [ride?._id, receiveMessage]);
 
-  // Calculate road route between captain and passenger
+  // Calculate live route based on ride status
   useEffect(() => {
     let isFetching = false;
+
+    const getDistanceInMeters = (a, b) => {
+      const toRad = (value) => (value * Math.PI) / 180;
+
+      const dLat = toRad(b.lat - a.lat);
+      const dLng = toRad(b.lng - a.lng);
+
+      const value =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(a.lat)) *
+        Math.cos(toRad(b.lat)) *
+        Math.sin(dLng / 2) ** 2;
+
+      return (
+        6371000 *
+        2 *
+        Math.atan2(Math.sqrt(value), Math.sqrt(1 - value))
+      );
+    };
 
     const calculateRoute = async () => {
       const captainPos = captainLocationRef.current;
       const passengerPos = passengerLocationRef.current;
 
-      if (!captainPos || !passengerPos || isFetching) return;
+      if (!captainPos || isFetching) return;
 
-      const getDistance = (a, b) => {
-        const toRad = (value) => (value * Math.PI) / 180;
+      let targetPos = null;
 
-        const dLat = toRad(b.lat - a.lat);
-        const dLng = toRad(b.lng - a.lng);
+      if (ride.status === "accepted") {
+        targetPos = passengerPos;
+      } else if (ride.status === "ongoing") {
+        targetPos = ride.destinationCoordinates;
+      } else {
+        return;
+      }
 
-        const value =
-          Math.sin(dLat / 2) ** 2 +
-          Math.cos(toRad(a.lat)) *
-          Math.cos(toRad(b.lat)) *
-          Math.sin(dLng / 2) ** 2;
+      if (
+        !targetPos ||
+        !Number.isFinite(Number(targetPos.lat)) ||
+        !Number.isFinite(Number(targetPos.lng))
+      ) {
+        return;
+      }
 
-        return 6371000 * 2 * Math.atan2(
-          Math.sqrt(value),
-          Math.sqrt(1 - value)
-        );
+      const target = {
+        lat: Number(targetPos.lat),
+        lng: Number(targetPos.lng),
       };
 
       const previous = lastRouteRef.current;
 
       const hasMoved =
         !previous.captain ||
-        getDistance(previous.captain, captainPos) >= 30 ||
-        getDistance(previous.passenger, passengerPos) >= 30;
+        !previous.target ||
+        previous.stage !== ride.status ||
+        getDistanceInMeters(previous.captain, captainPos) >= 30 ||
+        getDistanceInMeters(previous.target, target) >= 30;
 
       if (!hasMoved) return;
 
       isFetching = true;
 
       try {
-        const url =
-          `https://router.project-osrm.org/route/v1/driving/` +
-          `${captainPos.lng},${captainPos.lat};` +
-          `${passengerPos.lng},${passengerPos.lat}` +
-          `?overview=full&geometries=geojson`;
+        const result = await getCaptainRoute(captainPos, target);
 
-        const response = await fetch(url);
-        const data = await response.json();
+        if (result.success && result.data) {
+          setRouteCoordinates(result.data.routeCoordinates || []);
 
-        if (data.code === "Ok" && data.routes?.length > 0) {
-          const coordinates = data.routes[0].geometry.coordinates;
+          setRemainingDistance(
+            result.data.distance?.kilometers ?? null
+          );
 
-          setRouteCoordinates(
-            coordinates.map(([lng, lat]) => [lat, lng])
+          setRemainingDuration(
+            result.data.duration?.minutes ?? null
           );
 
           lastRouteRef.current = {
             captain: { ...captainPos },
-            passenger: { ...passengerPos },
+            target,
+            stage: ride.status,
           };
 
-          console.log("Road route updated:", coordinates.length, "points");
-        } else {
-          console.error("No road route found:", data.code);
+          console.log("Live route updated:", result.data);
         }
       } catch (error) {
         console.error("Route calculation failed:", error);
@@ -262,12 +287,12 @@ const CaptainRiding = () => {
       }
     };
 
-    const timer = setInterval(calculateRoute, 5000);
-
     calculateRoute();
 
+    const timer = setInterval(calculateRoute, 5000);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [ride.status, ride.destinationCoordinates?.lat, ride.destinationCoordinates?.lng]);
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gray-100">
@@ -295,18 +320,37 @@ const CaptainRiding = () => {
           )}
           <MapUpdater captainLocation={captainLocation} />
 
-         {captainLocation && (
-  <Marker
-    position={[captainLocation.lat, captainLocation.lng]}
-    icon={captainIcon}
-  />
-)}
-
-          {passengerLocation && (
+          {captainLocation && (
             <Marker
-              position={[passengerLocation.lat, passengerLocation.lng]}
+              position={[captainLocation.lat, captainLocation.lng]}
+              icon={captainIcon}
             />
           )}
+
+        {/* Show passenger marker only before the ride starts */}
+{ride.status === "accepted" && passengerLocation && (
+    <Marker
+        position={[
+            passengerLocation.lat,
+            passengerLocation.lng,
+        ]}
+    />
+)}
+
+
+          {/* Destination marker */}
+          {ride.status === "ongoing" && ride.destinationCoordinates && (
+            <Marker
+              position={[
+                ride.destinationCoordinates.lat,
+                ride.destinationCoordinates.lng,
+              ]}
+            />
+          )}
+
+
+
+
         </MapContainer>
       </div>
 
@@ -331,11 +375,15 @@ const CaptainRiding = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              Pickup location
+              {ride.status === "ongoing"
+                ? "Destination"
+                : "Pickup location"}
             </h1>
 
             <p className="text-sm text-gray-500 mt-1">
-              Navigate to the passenger
+              {ride.status === "ongoing"
+                ? "Navigate to the destination"
+                : "Navigate to the passenger"}
             </p>
           </div>
 
@@ -351,7 +399,7 @@ const CaptainRiding = () => {
         </div>
 
         {/* Collapsed View */}
-        {!showDetails && (
+        {!showDetails && ride.status === "accepted" && (
           <button
             onClick={() => setShowOtpPopup(true)}
             className="w-full mt-5 bg-green-600 text-white py-4 rounded-2xl font-bold"
@@ -407,21 +455,35 @@ const CaptainRiding = () => {
 
             {/* Ride information */}
             <div className="grid grid-cols-3 gap-3 mt-6">
+              {/* Remaining distance */}
               <div className="bg-gray-100 rounded-2xl p-3 text-center">
                 <h2 className="text-lg font-bold text-gray-900">
-                  {distance ? `${distance} KM` : "--"}
+                  {remainingDistance !== null
+                    ? `${remainingDistance} KM`
+                    : distance
+                      ? `${distance} KM`
+                      : "--"}
                 </h2>
-                <p className="text-xs text-gray-500 mt-1">Distance</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {ride.status === "ongoing" ? "Remaining distance" : "Distance"}
+                </p>
               </div>
 
+              {/* Remaining duration */}
               <div className="bg-gray-100 rounded-2xl p-3 text-center">
                 <div className="flex justify-center mb-1">
                   <FaClock className="text-gray-700" />
                 </div>
                 <h2 className="text-lg font-bold text-gray-900">
-                  {duration ? `${duration} min` : "--"}
+                  {remainingDuration !== null
+                    ? `${remainingDuration} min`
+                    : duration
+                      ? `${duration} min`
+                      : "--"}
                 </h2>
-                <p className="text-xs text-gray-500 mt-1">Duration</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {ride.status === "ongoing" ? "ETA to destination" : "Duration"}
+                </p>
               </div>
 
               <div className="bg-gray-100 rounded-2xl p-3 text-center">
@@ -436,12 +498,14 @@ const CaptainRiding = () => {
             </div>
 
             {/* Reached passenger */}
-            <button
-              onClick={() => setShowOtpPopup(true)}
-              className="w-full mt-6 bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition"
-            >
-              I reached the passenger
-            </button>
+            {ride.status === "accepted" && (
+              <button
+                onClick={() => setShowOtpPopup(true)}
+                className="w-full mt-6 bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white py-4 rounded-2xl font-bold text-lg shadow-lg transition"
+              >
+                I reached the passenger
+              </button>
+            )}
 
             <p className="text-center text-xs text-gray-400 mt-3">
               Verify the passenger's OTP before starting the ride.
@@ -451,7 +515,7 @@ const CaptainRiding = () => {
       </div>
 
       {/* OTP Popup */}
-      {showOtpPopup && (
+      {showOtpPopup && ride.status === "accepted" && (
         <div className="fixed inset-0 z-50 flex items-end bg-black/50">
           <div className="w-full">
             <ConfirmRidePOP

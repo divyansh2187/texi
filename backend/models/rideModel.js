@@ -28,6 +28,16 @@ const rideSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  destinationCoordinates: {
+    lat: {
+      type: Number,
+      required: true,
+    },
+    lng: {
+      type: Number,
+      required: true,
+    },
+  },
   vehicleType: {
     type: String,
     enum: ["car", "motorcycle", "auto"],

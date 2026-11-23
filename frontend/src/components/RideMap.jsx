@@ -148,6 +148,7 @@ const RideMap = ({
     isCaptainLocation = false,
     destinationCoordinates,
     routeCoordinates = [],
+    captainLocation,
     rideStage,
 }) => {
     const center = currentLocation
@@ -176,6 +177,20 @@ const RideMap = ({
                     icon={isCaptainLocation ? captainMarkerIcon : currentLocationIcon}
                 />
             )}
+
+
+            {/* Captain's live location during ongoing ride */}
+            {rideStage === "ongoing" && captainLocation && (
+                <Marker
+                    position={[
+                        captainLocation.lat,
+                        captainLocation.lng,
+                    ]}
+                    icon={captainMarkerIcon}
+                />
+            )}
+
+
 
             {/* Passenger live GPS marker */}
             {passengerLocation && (
