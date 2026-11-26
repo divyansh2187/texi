@@ -6,10 +6,17 @@ const rideModel = require("./models/rideModel");
 let io;
 
 function initializeSocket(server) {
+    const allowedOrigins = [
+        "http://localhost:5173",
+        "https://kcfkz06n-5173.inc1.devtunnels.ms",
+        process.env.FRONTEND_URL
+    ].filter(Boolean);
+
     io = new Server(server, {
         cors: {
-            origin: "http://localhost:5173",
+            origin: allowedOrigins,
             methods: ["GET", "POST"],
+            credentials: true
         }
     });
 
@@ -88,58 +95,58 @@ function initializeSocket(server) {
 
 
         socket.on("update-location-user", async (data) => {
-    try {
-        const { userId, rideId, location } = data;
+            try {
+                const { userId, rideId, location } = data;
 
-        if (
-            !userId ||
-            !rideId ||
-            !location ||
-            location.lat == null ||
-            location.lng == null
-        ) {
-            return socket.emit("error", {
-                message: "Invalid passenger location data",
-            });
-        }
+                if (
+                    !userId ||
+                    !rideId ||
+                    !location ||
+                    location.lat == null ||
+                    location.lng == null
+                ) {
+                    return socket.emit("error", {
+                        message: "Invalid passenger location data",
+                    });
+                }
 
-        // Verify that this passenger belongs to this active ride
-        const activeRide = await rideModel.findOne({
-            _id: rideId,
-            userId,
-            status: { $in: ["accepted", "ongoing"] },
-        }).select("userId captainId status");
+                // Verify that this passenger belongs to this active ride
+                const activeRide = await rideModel.findOne({
+                    _id: rideId,
+                    userId,
+                    status: { $in: ["accepted", "ongoing"] },
+                }).select("userId captainId status");
 
-        if (!activeRide) {
-            return;
-        }
+                if (!activeRide) {
+                    return;
+                }
 
-        // Find the assigned captain
-        const captain = await captainModel
-            .findById(activeRide.captainId)
-            .select("socketId");
+                // Find the assigned captain
+                const captain = await captainModel
+                    .findById(activeRide.captainId)
+                    .select("socketId");
 
-        if (captain?.socketId) {
-            io.to(captain.socketId).emit("user-location-updated", {
-                rideId: activeRide._id,
-                userId,
-                location: {
-                    lat: Number(location.lat),
-                    lng: Number(location.lng),
-                },
-            });
+                if (captain?.socketId) {
+                    io.to(captain.socketId).emit("user-location-updated", {
+                        rideId: activeRide._id,
+                        userId,
+                        location: {
+                            lat: Number(location.lat),
+                            lng: Number(location.lng),
+                        },
+                    });
 
-            console.log("Passenger location sent to captain:", location);
-        }
+                    console.log("Passenger location sent to captain:", location);
+                }
 
-    } catch (err) {
-        console.error("Passenger location update error:", err);
+            } catch (err) {
+                console.error("Passenger location update error:", err);
 
-        socket.emit("error", {
-            message: "Failed to update passenger location",
+                socket.emit("error", {
+                    message: "Failed to update passenger location",
+                });
+            }
         });
-    }
-});
 
 
 

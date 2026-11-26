@@ -17,8 +17,9 @@ connecttoDB();
 
 const allowedOrigins = [
     "http://localhost:5173",
-    "https://kcfkz06n-5173.inc1.devtunnels.ms"
-];
+    "https://kcfkz06n-5173.inc1.devtunnels.ms",
+    process.env.FRONTEND_URL
+].filter(Boolean);
 
 app.use(cors({
     origin: function(origin, callback) {
