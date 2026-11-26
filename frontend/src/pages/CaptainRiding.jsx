@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useContext, useRef } from "react";
 import { CaptainDataContext } from "../context/CaptainContext";
 import { SocketContext } from "../context/SocketContext";
@@ -12,6 +13,18 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { getCaptainRoute } from "../api/map.api";
 
+import {
+  FaLocationArrow,
+  FaMapMarkerAlt,
+  FaMoneyBillWave,
+  FaClock,
+  FaUser,
+} from "react-icons/fa";
+import { MdKeyboardArrowUp } from "react-icons/md";
+import { useLocation } from "react-router-dom";
+import ConfirmRidePOP from "../components/confirmRidePOP";
+
+// CAPTAIN ICON
 const captainIcon = new L.DivIcon({
   className: "",
   html: `
@@ -34,19 +47,7 @@ const captainIcon = new L.DivIcon({
   iconAnchor: [21, 21],
 });
 
-import {
-  FaLocationArrow,
-  FaMapMarkerAlt,
-  FaMoneyBillWave,
-  FaClock,
-  FaUser,
-} from "react-icons/fa";
-import { MdKeyboardArrowUp } from "react-icons/md";
-import { useLocation } from "react-router-dom";
-import ConfirmRidePOP from "../components/confirmRidePOP";
-
-
-
+// MAP UPDATER
 const MapUpdater = ({ captainLocation }) => {
   const map = useMap();
 
@@ -62,18 +63,14 @@ const MapUpdater = ({ captainLocation }) => {
   return null;
 };
 
-
-
-
 const CaptainRiding = () => {
   const { captain } = useContext(CaptainDataContext);
   const { sendMessage, receiveMessage } = useContext(SocketContext);
   const location = useLocation();
 
-
-  // Get ride data passed from CaptainHome
+  // RIDE DATA
   const [ride, setRide] = useState(
-    location.state?.ride?.data || location.state?.ride || {},
+    location.state?.ride?.data || location.state?.ride || {}
   );
 
   console.log("RIDE DATA:", ride);
@@ -84,9 +81,6 @@ const CaptainRiding = () => {
   const [captainLocation, setCaptainLocation] = useState(null);
   const [remainingDistance, setRemainingDistance] = useState(null);
   const [remainingDuration, setRemainingDuration] = useState(null);
-
-
-
   const [routeCoordinates, setRouteCoordinates] = useState([]);
 
   const captainLocationRef = useRef(null);
@@ -102,7 +96,7 @@ const CaptainRiding = () => {
 
   console.log("CAPTAIN LOCATION STATE:", captainLocation);
 
-  // Actual backend response uses userId
+  // PASSENGER DETAILS
   const passengerName = ride?.userId?.fullname
     ? `${ride.userId.fullname.firstname || ""} ${ride.userId.fullname.lastname || ""}`.trim()
     : "Passenger";
@@ -114,15 +108,13 @@ const CaptainRiding = () => {
   const distance = ride?.distance;
   const duration = ride?.duration;
 
-
-
+  // CAPTAIN GPS + SOCKET
   useEffect(() => {
     if (!captain?._id) {
       console.log("Captain ID not available");
       return;
     }
 
-    // Register captain's socket connection
     sendMessage("joinRoom", {
       userId: captain._id,
       userType: "captain",
@@ -146,6 +138,7 @@ const CaptainRiding = () => {
         });
 
         console.log("Captain GPS:", latitude, longitude);
+
         sendMessage("update-location-captain", {
           captainId: captain._id,
           rideId: ride?._id,
@@ -169,11 +162,9 @@ const CaptainRiding = () => {
       navigator.geolocation.clearWatch(watchId);
       console.log("Captain GPS tracking stopped");
     };
-
   }, [captain?._id, sendMessage]);
 
-
-  // Receive passenger's live GPS location
+  // RECEIVE PASSENGER LIVE LOCATION
   useEffect(() => {
     if (!ride?._id) return;
 
@@ -193,7 +184,7 @@ const CaptainRiding = () => {
     return cleanup;
   }, [ride?._id, receiveMessage]);
 
-  // Calculate live route based on ride status
+  // LIVE ROUTE CALCULATION
   useEffect(() => {
     let isFetching = false;
 
@@ -292,12 +283,17 @@ const CaptainRiding = () => {
     const timer = setInterval(calculateRoute, 5000);
 
     return () => clearInterval(timer);
-  }, [ride.status, ride.destinationCoordinates?.lat, ride.destinationCoordinates?.lng]);
+  }, [
+    ride.status,
+    ride.destinationCoordinates?.lat,
+    ride.destinationCoordinates?.lng,
+  ]);
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gray-100">
-      {/* Live GPS Map */}
-      <div className="absolute inset-0 z-0">
+
+      {/* LIVE GPS MAP */}
+      <div className="absolute inset-0 z-0 md:right-[340px] lg:right-[390px] xl:right-[420px]">
         <MapContainer
           center={[26.100748, 74.294059]}
           zoom={15}
@@ -307,7 +303,8 @@ const CaptainRiding = () => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {/* Actual road route */}
+
+          {/* ACTUAL ROAD ROUTE */}
           {routeCoordinates.length > 0 && (
             <Polyline
               positions={routeCoordinates}
@@ -318,27 +315,31 @@ const CaptainRiding = () => {
               }}
             />
           )}
+
           <MapUpdater captainLocation={captainLocation} />
 
+          {/* CAPTAIN MARKER */}
           {captainLocation && (
             <Marker
-              position={[captainLocation.lat, captainLocation.lng]}
+              position={[
+                captainLocation.lat,
+                captainLocation.lng,
+              ]}
               icon={captainIcon}
             />
           )}
 
-        {/* Show passenger marker only before the ride starts */}
-{ride.status === "accepted" && passengerLocation && (
-    <Marker
-        position={[
-            passengerLocation.lat,
-            passengerLocation.lng,
-        ]}
-    />
-)}
+          {/* PASSENGER MARKER BEFORE RIDE STARTS */}
+          {ride.status === "accepted" && passengerLocation && (
+            <Marker
+              position={[
+                passengerLocation.lat,
+                passengerLocation.lng,
+              ]}
+            />
+          )}
 
-
-          {/* Destination marker */}
+          {/* DESTINATION MARKER */}
           {ride.status === "ongoing" && ride.destinationCoordinates && (
             <Marker
               position={[
@@ -347,16 +348,11 @@ const CaptainRiding = () => {
               ]}
             />
           )}
-
-
-
-
         </MapContainer>
       </div>
 
-      {/* Status */}
-      {/* Status */}
-      <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10">
+      {/* STATUS */}
+      <div className="absolute top-5 left-1/2 -translate-x-1/2 z-10 md:left-[calc((100%-340px)/2)] lg:left-[calc((100%-390px)/2)] xl:left-[calc((100%-420px)/2)]">
         <div className="bg-black/80 backdrop-blur-md px-6 py-3 rounded-full shadow-lg">
           <p className="text-white text-sm font-semibold">
             {ride.status === "ongoing"
@@ -366,12 +362,14 @@ const CaptainRiding = () => {
         </div>
       </div>
 
-      {/* Bottom Panel */}
+      {/* BOTTOM PANEL / DESKTOP RIGHT PANEL */}
       <div
-        className={`absolute bottom-0 left-0 w-full bg-white rounded-t-[32px] px-5 shadow-2xl transition-all duration-300 ${showDetails ? "py-5" : "py-4"
-          }`}
+        className={`absolute bottom-0 left-0 w-full bg-white rounded-t-[32px] px-5 shadow-2xl transition-all duration-300 ${
+          showDetails ? "py-5" : "py-4"
+        } md:top-0 md:bottom-0 md:left-auto md:right-0 md:w-[340px] md:rounded-none md:rounded-l-3xl md:overflow-y-auto md:px-5 md:py-6 lg:w-[390px] xl:w-[420px]`}
       >
-        {/* Panel Header */}
+
+        {/* PANEL HEADER */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
@@ -392,13 +390,14 @@ const CaptainRiding = () => {
             className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center text-2xl"
           >
             <MdKeyboardArrowUp
-              className={`transition-transform ${showDetails ? "rotate-180" : ""
-                }`}
+              className={`transition-transform ${
+                showDetails ? "rotate-180" : ""
+              }`}
             />
           </button>
         </div>
 
-        {/* Collapsed View */}
+        {/* COLLAPSED VIEW */}
         {!showDetails && ride.status === "accepted" && (
           <button
             onClick={() => setShowOtpPopup(true)}
@@ -408,10 +407,11 @@ const CaptainRiding = () => {
           </button>
         )}
 
-        {/* Expanded View */}
+        {/* EXPANDED VIEW */}
         {showDetails && (
           <div className="mt-5">
-            {/* Passenger */}
+
+            {/* PASSENGER */}
             <div className="flex items-center justify-between bg-gray-100 rounded-2xl p-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center">
@@ -419,14 +419,18 @@ const CaptainRiding = () => {
                 </div>
 
                 <div>
-                  <h2 className="font-bold text-gray-900">{passengerName}</h2>
+                  <h2 className="font-bold text-gray-900">
+                    {passengerName}
+                  </h2>
 
-                  <p className="text-sm text-gray-500">Passenger</p>
+                  <p className="text-sm text-gray-500">
+                    Passenger
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Locations */}
+            {/* LOCATIONS */}
             <div className="mt-6 flex flex-col gap-5">
               <div className="flex items-start gap-4">
                 <div className="bg-green-100 p-3 rounded-full">
@@ -434,9 +438,13 @@ const CaptainRiding = () => {
                 </div>
 
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">Pickup</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    Pickup
+                  </h3>
 
-                  <p className="text-sm text-gray-500 mt-1">{pickup}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {pickup}
+                  </p>
                 </div>
               </div>
 
@@ -446,16 +454,21 @@ const CaptainRiding = () => {
                 </div>
 
                 <div className="flex-1">
-                  <h3 className="font-semibold text-gray-900">Destination</h3>
+                  <h3 className="font-semibold text-gray-900">
+                    Destination
+                  </h3>
 
-                  <p className="text-sm text-gray-500 mt-1">{destination}</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {destination}
+                  </p>
                 </div>
               </div>
             </div>
 
-            {/* Ride information */}
+            {/* RIDE INFORMATION */}
             <div className="grid grid-cols-3 gap-3 mt-6">
-              {/* Remaining distance */}
+
+              {/* DISTANCE */}
               <div className="bg-gray-100 rounded-2xl p-3 text-center">
                 <h2 className="text-lg font-bold text-gray-900">
                   {remainingDistance !== null
@@ -464,16 +477,20 @@ const CaptainRiding = () => {
                       ? `${distance} KM`
                       : "--"}
                 </h2>
+
                 <p className="text-xs text-gray-500 mt-1">
-                  {ride.status === "ongoing" ? "Remaining distance" : "Distance"}
+                  {ride.status === "ongoing"
+                    ? "Remaining distance"
+                    : "Distance"}
                 </p>
               </div>
 
-              {/* Remaining duration */}
+              {/* DURATION */}
               <div className="bg-gray-100 rounded-2xl p-3 text-center">
                 <div className="flex justify-center mb-1">
                   <FaClock className="text-gray-700" />
                 </div>
+
                 <h2 className="text-lg font-bold text-gray-900">
                   {remainingDuration !== null
                     ? `${remainingDuration} min`
@@ -481,23 +498,31 @@ const CaptainRiding = () => {
                       ? `${duration} min`
                       : "--"}
                 </h2>
+
                 <p className="text-xs text-gray-500 mt-1">
-                  {ride.status === "ongoing" ? "ETA to destination" : "Duration"}
+                  {ride.status === "ongoing"
+                    ? "ETA to destination"
+                    : "Duration"}
                 </p>
               </div>
 
+              {/* FARE */}
               <div className="bg-gray-100 rounded-2xl p-3 text-center">
                 <div className="flex justify-center mb-1">
                   <FaMoneyBillWave className="text-green-600" />
                 </div>
+
                 <h2 className="text-lg font-bold text-gray-900">
                   {fare != null ? `₹${fare}` : "--"}
                 </h2>
-                <p className="text-xs text-gray-500 mt-1">Fare</p>
+
+                <p className="text-xs text-gray-500 mt-1">
+                  Fare
+                </p>
               </div>
             </div>
 
-            {/* Reached passenger */}
+            {/* REACHED PASSENGER */}
             {ride.status === "accepted" && (
               <button
                 onClick={() => setShowOtpPopup(true)}
@@ -514,10 +539,10 @@ const CaptainRiding = () => {
         )}
       </div>
 
-      {/* OTP Popup */}
+      {/* OTP POPUP */}
       {showOtpPopup && ride.status === "accepted" && (
-        <div className="fixed inset-0 z-50 flex items-end bg-black/50">
-          <div className="w-full">
+        <div className="fixed inset-0 z-50 flex items-end bg-black/50 md:items-center md:justify-center md:p-6">
+          <div className="w-full md:max-w-[420px]">
             <ConfirmRidePOP
               ride={ride}
               setridePOPup={setShowOtpPopup}

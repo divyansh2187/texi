@@ -13,6 +13,7 @@ import "leaflet/dist/leaflet.css";
 // Default marker icon
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
+
 const captainMarkerIcon = new L.DivIcon({
     className: "",
     html: `
@@ -50,7 +51,6 @@ const currentLocationIcon = new L.DivIcon({
     iconSize: [18, 18],
     iconAnchor: [9, 9],
 });
-
 
 const passengerLocationIcon = new L.DivIcon({
     className: "",
@@ -107,23 +107,57 @@ const defaultIcon = new L.Icon({
     iconAnchor: [12, 41],
 });
 
+// MAP RESIZE HANDLER
+const MapResizeHandler = () => {
+    const map = useMap();
 
+    useEffect(() => {
+        const container = map.getContainer();
+
+        const handleResize = () => {
+            map.invalidateSize({
+                animate: false,
+                pan: false,
+            });
+        };
+
+        let resizeObserver;
+
+        if (typeof ResizeObserver !== "undefined") {
+            resizeObserver = new ResizeObserver(handleResize);
+            resizeObserver.observe(container);
+        }
+
+        window.addEventListener("resize", handleResize);
+
+        handleResize();
+
+        return () => {
+            resizeObserver?.disconnect();
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [map]);
+
+    return null;
+};
+
+// MAP UPDATER
 const MapUpdater = ({ currentLocation, routeCoordinates, rideStage }) => {
     const map = useMap();
+
     const hasCenteredOnUser = React.useRef(false);
     const previousStage = React.useRef(null);
 
     useEffect(() => {
-        // Center the map on the user's GPS location the first time it arrives
         if (currentLocation && !hasCenteredOnUser.current) {
             map.setView(
                 [currentLocation.lat, currentLocation.lng],
                 16
             );
+
             hasCenteredOnUser.current = true;
         }
 
-        // Fit the destination route when the ride starts
         if (
             rideStage === "ongoing" &&
             previousStage.current !== "ongoing" &&
@@ -139,7 +173,6 @@ const MapUpdater = ({ currentLocation, routeCoordinates, rideStage }) => {
 
     return null;
 };
-
 
 const RideMap = ({
     currentLocation,
@@ -174,10 +207,13 @@ const RideMap = ({
             {currentLocation && (
                 <Marker
                     position={center}
-                    icon={isCaptainLocation ? captainMarkerIcon : currentLocationIcon}
+                    icon={
+                        isCaptainLocation
+                            ? captainMarkerIcon
+                            : currentLocationIcon
+                    }
                 />
             )}
-
 
             {/* Captain's live location during ongoing ride */}
             {rideStage === "ongoing" && captainLocation && (
@@ -189,8 +225,6 @@ const RideMap = ({
                     icon={captainMarkerIcon}
                 />
             )}
-
-
 
             {/* Passenger live GPS marker */}
             {passengerLocation && (
@@ -239,6 +273,8 @@ const RideMap = ({
                 routeCoordinates={routeCoordinates}
                 rideStage={rideStage}
             />
+
+            <MapResizeHandler />
         </MapContainer>
     );
 };

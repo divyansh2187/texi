@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -6,7 +7,6 @@ const CaptainPickupPOP = () => {
   const [otp, setOtp] = useState("");
 
   const navigate = useNavigate();
-
   const x = useMotionValue(0);
 
   const handleRideStart = () => {
@@ -25,14 +25,31 @@ const CaptainPickupPOP = () => {
   };
 
   return (
-    <div className="w-full h-full bg-white rounded-t-[30px] px-4 pt-4 pb-5 shadow-[0_-10px_30px_rgba(0,0,0,0.12)]">
-
+    <div
+      className="
+        w-full h-full
+        bg-white
+        rounded-t-[30px]
+        px-4 pt-4 pb-5
+        shadow-[0_-10px_30px_rgba(0,0,0,0.12)]
+        md:h-auto
+        md:w-full
+        md:max-w-[420px]
+        md:max-h-[calc(100dvh-2.5rem)]
+        md:overflow-y-auto
+        md:overscroll-contain
+        md:rounded-3xl
+        md:px-6 md:py-5
+        md:shadow-2xl
+        md:mx-auto
+      "
+    >
       {/* Top Line */}
-      <div className="w-14 h-1.5 bg-gray-300 rounded-full mx-auto"></div>
+      <div className="w-14 h-1.5 bg-gray-300 rounded-full mx-auto md:hidden"></div>
 
       {/* Heading */}
-      <div className="mt-3 text-center">
-        <h1 className="text-2xl font-bold text-[#111827]">
+      <div className="mt-3 text-center md:mt-0">
+        <h1 className="text-2xl md:text-2xl font-bold text-[#111827]">
           Arrived at Pickup
         </h1>
 
@@ -42,17 +59,17 @@ const CaptainPickupPOP = () => {
       </div>
 
       {/* Passenger */}
-      <div className="mt-6 flex items-center justify-between bg-gray-100 rounded-2xl p-4">
+      <div className="mt-6 md:mt-5 flex items-center justify-between bg-gray-100 rounded-2xl p-4 gap-3">
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <img
             src="https://randomuser.me/api/portraits/women/44.jpg"
-            alt=""
-            className="w-14 h-14 rounded-full object-cover"
+            alt="Passenger"
+            className="w-14 h-14 rounded-full object-cover shrink-0"
           />
 
-          <div>
-            <h2 className="font-bold text-lg">
+          <div className="min-w-0">
+            <h2 className="font-bold text-lg md:text-base truncate">
               Tanu Sharma
             </h2>
 
@@ -62,7 +79,7 @@ const CaptainPickupPOP = () => {
           </div>
         </div>
 
-        <div className="text-right">
+        <div className="text-right shrink-0">
           <h3 className="font-bold text-lg">
             ₹193
           </h3>
@@ -71,13 +88,12 @@ const CaptainPickupPOP = () => {
             Fare
           </p>
         </div>
-
       </div>
 
       {/* OTP */}
       <form
         onSubmit={(e) => e.preventDefault()}
-        className="mt-5"
+        className="mt-5 md:mt-5"
       >
         <label className="text-sm font-semibold text-gray-700">
           Enter Ride OTP
@@ -92,7 +108,7 @@ const CaptainPickupPOP = () => {
         />
 
         {/* Swipe */}
-        <div className="mt-6 relative w-full h-14 bg-[#111827] rounded-full overflow-hidden">
+        <div className="mt-6 md:mt-5 relative w-full h-14 bg-[#111827] rounded-full overflow-hidden">
 
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="text-sm font-semibold text-white">

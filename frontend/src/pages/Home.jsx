@@ -1,18 +1,19 @@
+
 import React from "react";
 import { FiArrowRight } from "react-icons/fi";
 import { NavLink } from "react-router-dom";
 
 const Home = () => {
-
   return (
     <div>
       <div
         className="
-        object-center bg-bottom bg-no-repeat bg-cover
-        bg-[url(https://images.unsplash.com/photo-1724250251649-54b24386ae57?q=80&w=735&auto=format&fit=crop)]
-        lg:bg-[url(https://images.unsplash.com/photo-1755227832786-8f3cc807d724?q=80&w=1025&auto=format&fit=crop)]
-        h-screen w-full flex flex-col justify-between lg:justify-center
-        pt-4 font-[Inter]
+          object-center bg-bottom bg-no-repeat bg-cover
+          bg-[url(https://images.unsplash.com/photo-1724250251649-54b24386ae57?q=80&w=735&auto=format&fit=crop)]
+          lg:bg-[url(https://images.unsplash.com/photo-1755227832786-8f3cc807d724?q=80&w=1025&auto=format&fit=crop)]
+          h-screen w-full flex flex-col justify-between lg:justify-center
+          pt-4 font-[Inter]
+          md:items-center
         "
       >
         {/* Logo */}
@@ -23,9 +24,11 @@ const Home = () => {
         {/* Card */}
         <div
           className="
-          bg-white px-5 py-6 rounded-t-3xl shadow-lg flex flex-col gap-4
-          lg:w-[400px] lg:py-3 lg:mx-auto lg:rounded-2xl lg:text-center
-          lg:bg-transparent
+            bg-white px-5 py-6 rounded-t-3xl shadow-lg flex flex-col gap-4
+            lg:w-[400px] lg:py-3 lg:mx-auto lg:rounded-2xl lg:text-center
+            lg:bg-transparent
+            md:w-[400px] md:rounded-2xl md:mb-8
+            lg:mb-0
           "
         >
           <h2 className="text-2xl sm:text-3xl font-semibold">

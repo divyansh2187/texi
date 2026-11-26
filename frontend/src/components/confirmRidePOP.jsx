@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { useNavigate } from "react-router-dom";
@@ -56,18 +57,32 @@ const ConfirmRidePOP = ({
   };
 
   return (
-    <div className="w-full bg-white rounded-t-[30px] px-4 pt-4 pb-5 shadow-2xl">
-      <div className="w-14 h-1.5 bg-gray-300 rounded-full mx-auto" />
+    <div className="
+      w-full
+      bg-white
+      rounded-t-[30px]
+      px-4 pt-4 pb-5
+      shadow-2xl
+      md:rounded-3xl
+      md:px-5 md:py-5
+      md:max-h-[calc(100vh-2.5rem)]
+      md:overflow-y-auto
+    ">
+      <div className="w-14 h-1.5 bg-gray-300 rounded-full mx-auto md:hidden" />
 
-      <div className="mt-3 text-center">
-        <h1 className="text-2xl font-bold text-gray-900">Start Ride</h1>
+      <div className="mt-3 md:mt-0 text-center">
+        <h1 className="text-2xl md:text-xl font-bold text-gray-900">
+          Start Ride
+        </h1>
         <p className="text-sm text-gray-500 mt-1">
           Enter the OTP provided by your passenger
         </p>
       </div>
 
-      <form className="mt-5" onSubmit={(e) => e.preventDefault()}>
-        <label className="text-sm font-semibold text-gray-700">Ride OTP</label>
+      <form className="mt-5 md:mt-4" onSubmit={(e) => e.preventDefault()}>
+        <label className="text-sm font-semibold text-gray-700">
+          Ride OTP
+        </label>
 
         <input
           type="text"
@@ -85,7 +100,7 @@ const ConfirmRidePOP = ({
 
         {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
 
-        <div className="mt-6 relative w-full h-14 bg-gray-900 rounded-full overflow-hidden">
+        <div className="mt-6 md:mt-4 relative w-full h-14 bg-gray-900 rounded-full overflow-hidden">
           <div className="absolute inset-0 flex items-center justify-center">
             <p className="text-sm font-semibold text-white">
               {loading ? "Verifying OTP..." : "Swipe to Start Ride"}

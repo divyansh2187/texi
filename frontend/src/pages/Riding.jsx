@@ -25,8 +25,8 @@ const getDistanceInMeters = (point1, point2) => {
   const a =
     Math.sin(deltaLat / 2) ** 2 +
     Math.cos(lat1) *
-    Math.cos(lat2) *
-    Math.sin(deltaLng / 2) ** 2;
+      Math.cos(lat2) *
+      Math.sin(deltaLng / 2) ** 2;
 
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
@@ -90,7 +90,6 @@ const Riding = ({
 
     return cleanup;
   }, [ride?._id, receiveMessage]);
-
 
   // Calculate live road route based on ride stage
   useEffect(() => {
@@ -174,12 +173,11 @@ const Riding = ({
     rideStage,
   ]);
 
-
   return (
     <div className="relative h-screen w-full overflow-hidden bg-gray-100">
 
       {/* Live Map */}
-      <div className="absolute inset-0 z-0">
+      <div className="absolute inset-0 z-0 md:right-[340px] lg:right-[390px] xl:right-[420px]">
         <RideMap
           currentLocation={
             rideStage === "ongoing"
@@ -200,8 +198,8 @@ const Riding = ({
 
       {/* Live Navigation Information */}
       {rideStage === "ongoing" && (
-        <div className="absolute top-20 left-4 right-4 z-20">
-          <div className="bg-white rounded-2xl shadow-xl p-4 flex items-center justify-between">
+        <div className="absolute top-20 left-4 right-4 z-20 md:left-6 md:right-[364px] lg:right-[414px] xl:right-[444px]">
+          <div className="bg-white rounded-2xl shadow-xl p-4 flex items-center justify-between max-w-2xl mx-auto">
             <div>
               <p className="text-xs text-gray-500 font-medium">
                 Remaining distance
@@ -232,7 +230,7 @@ const Riding = ({
       )}
 
       {/* Ride Status */}
-      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/85 backdrop-blur-md px-5 py-3 rounded-full flex items-center gap-3 shadow-xl whitespace-nowrap">
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 bg-black/85 backdrop-blur-md px-5 py-3 rounded-full flex items-center gap-3 shadow-xl whitespace-nowrap md:left-[calc((100%-340px)/2)] lg:left-[calc((100%-390px)/2)] xl:left-[calc((100%-420px)/2)]">
         <FaCircle className="text-green-400 text-[9px] animate-pulse" />
         <p className="text-white text-sm font-semibold">
           {rideStage === "accepted"
@@ -242,20 +240,20 @@ const Riding = ({
       </div>
 
       {/* Bottom Ride Panel */}
-      <div className="absolute bottom-0 left-0 w-full h-[55%] bg-white rounded-t-[35px] shadow-2xl z-10 flex flex-col">
+      <div className="absolute bottom-0 left-0 w-full h-[55%] bg-white rounded-t-[35px] shadow-2xl z-10 flex flex-col md:top-0 md:bottom-0 md:left-auto md:right-0 md:w-[340px] md:h-full md:rounded-none md:rounded-l-[28px] md:shadow-2xl lg:w-[390px] xl:w-[420px]">
 
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-4 py-4 md:px-5 md:py-6">
 
           {/* Heading */}
-          <div className="flex justify-between items-center mb-3">
+          <div className="flex justify-between items-center mb-3 md:mb-5">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-gray-900 md:text-2xl">
                 {rideStage === "accepted"
                   ? "Driver On The Way"
                   : "Enjoy Your Ride"}
               </h1>
 
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-500 mt-1 md:text-sm">
                 {rideStage === "accepted"
                   ? "Your ride has been confirmed"
                   : "Your trip is in progress"}
@@ -271,12 +269,12 @@ const Riding = ({
           </div>
 
           {/* Driver Card */}
-          <div className="bg-white rounded-3xl shadow-md p-3 border border-gray-100">
+          <div className="bg-white rounded-3xl shadow-md p-3 md:p-4 border border-gray-100">
 
             <div className="flex justify-between items-center gap-3">
 
-              <div className="flex items-center gap-3">
-                <div className="bg-gray-100 rounded-2xl p-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="bg-gray-100 rounded-2xl p-2 shrink-0">
                   <img
                     src={vehicleImage}
                     alt={vehicleName}
@@ -284,7 +282,7 @@ const Riding = ({
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-base font-bold leading-none capitalize">
                     {captainName}
                   </h2>
@@ -293,13 +291,13 @@ const Riding = ({
                     {vehicleName}
                   </p>
 
-                  <h1 className="text-base font-black mt-2 tracking-wide uppercase">
+                  <h1 className="text-base font-black mt-2 tracking-wide uppercase break-words">
                     {vehicleNumber}
                   </h1>
                 </div>
               </div>
 
-              <div className="bg-amber-100 border border-amber-200 px-3 py-2 rounded-2xl flex flex-col items-center min-w-[85px]">
+              <div className="bg-amber-100 border border-amber-200 px-3 py-2 rounded-2xl flex flex-col items-center min-w-[85px] shrink-0">
                 <FaClock className="text-amber-700 text-sm mb-1" />
 
                 <p className="text-[10px] text-gray-500">
@@ -393,7 +391,7 @@ const Riding = ({
         </div>
 
         {/* Bottom Buttons */}
-        <div className="flex gap-3 bg-gradient-to-t from-gray-100 via-gray-100 to-transparent px-4 pt-3 pb-4">
+        <div className="flex gap-3 bg-gradient-to-t from-gray-100 via-gray-100 to-transparent px-4 pt-3 pb-4 md:px-5 md:pb-6">
 
           <div className="flex-1 bg-black text-white py-3 rounded-2xl text-sm font-semibold flex items-center justify-center gap-2 shadow-lg">
             <FaMoneyBillWave />

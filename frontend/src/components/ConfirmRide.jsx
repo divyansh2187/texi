@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   FaMapMarkerAlt,
@@ -38,15 +39,15 @@ const ConfirmRide = ({
     },
   };
 
-  // Safe fallback
   const currentVehicle = vehicleData[selectedVehicle] || vehicleData.car;
 
   return (
-    <div className="w-full h-full bg-white rounded-t-3xl px-5 py-4 shadow-2xl flex flex-col justify-between overflow-hidden">
+    <div className="w-full h-full bg-white rounded-t-3xl px-5 py-4 shadow-2xl flex flex-col justify-between overflow-hidden md:rounded-2xl md:px-4 md:py-4 md:shadow-none">
+
       <div>
         {/* Header */}
         <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-gray-900 md:text-xl">
             Confirm Ride
           </h1>
 
@@ -55,35 +56,37 @@ const ConfirmRide = ({
               setConfirmRide(false);
               setvehicalpanel(true);
             }}
-            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-black hover:text-white transition-all duration-300"
+            aria-label="Close confirmation"
+            className="w-10 h-10 rounded-full bg-gray-100 hover:bg-black hover:text-white transition-all duration-300 md:w-9 md:h-9"
           >
             ✕
           </button>
         </div>
 
         {/* Vehicle Image */}
-        <div className="w-full flex justify-center -mt-2">
+        <div className="w-full flex justify-center -mt-2 md:mt-0">
           {currentVehicle && (
             <img
               src={currentVehicle.image}
               alt={currentVehicle.name}
-              className="w-32 h-32 object-contain"
+              className="w-32 h-32 object-contain md:w-36 md:h-36"
             />
           )}
         </div>
 
         {/* Ride Details */}
-        <div className="bg-gray-50 rounded-3xl overflow-hidden border border-gray-200 -mt-2">
+        <div className="bg-gray-50 rounded-3xl overflow-hidden border border-gray-200 -mt-2 md:mt-0 md:rounded-2xl">
+
           {/* Pickup */}
           <div className="flex items-start gap-4 p-3 border-b border-gray-200">
-            <FaLocationArrow className="text-black text-lg mt-1" />
+            <FaLocationArrow className="text-black text-lg mt-1 shrink-0" />
 
-            <div>
+            <div className="min-w-0">
               <h3 className="text-xs text-gray-500 font-medium">
                 Pickup Location
               </h3>
 
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-gray-900 break-words">
                 {pickup || "Current Location"}
               </p>
             </div>
@@ -91,14 +94,14 @@ const ConfirmRide = ({
 
           {/* Destination */}
           <div className="flex items-start gap-4 p-3 border-b border-gray-200">
-            <FaMapMarkerAlt className="text-black text-lg mt-1" />
+            <FaMapMarkerAlt className="text-black text-lg mt-1 shrink-0" />
 
-            <div>
+            <div className="min-w-0">
               <h3 className="text-xs text-gray-500 font-medium">
                 Destination
               </h3>
 
-              <p className="text-sm font-semibold text-gray-900">
+              <p className="text-sm font-semibold text-gray-900 break-words">
                 {destination || "Enter Destination"}
               </p>
             </div>
@@ -106,7 +109,7 @@ const ConfirmRide = ({
 
           {/* Payment */}
           <div className="flex items-start gap-4 p-3">
-            <FaMoneyBillWave className="text-black text-lg mt-1" />
+            <FaMoneyBillWave className="text-black text-lg mt-1 shrink-0" />
 
             <div>
               <h3 className="text-xs text-gray-500 font-medium">
@@ -127,7 +130,7 @@ const ConfirmRide = ({
           setLookingForDriver(true);
           handleCreateRide();
         }}
-        className="w-full mt-4 bg-green-500 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-green-600 transition-all duration-300"
+        className="w-full mt-4 bg-green-500 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-green-600 transition-all duration-300 md:py-3 md:text-base"
       >
         Confirm Booking
       </button>

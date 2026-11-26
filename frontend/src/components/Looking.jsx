@@ -1,3 +1,4 @@
+
 import React from "react";
 import { FaSpinner } from "react-icons/fa";
 
@@ -25,23 +26,22 @@ const LookingForDriver = ({
     },
   };
 
-
   const currentVehicle = vehicleData[selectedVehicle] || vehicleData.car;
 
   return (
-    <div className="w-full h-full bg-white rounded-t-3xl px-5 py-6 shadow-2xl flex flex-col justify-between">
+    <div className="w-full h-full bg-white rounded-t-3xl px-5 py-6 shadow-2xl flex flex-col justify-between md:rounded-2xl md:px-4 md:py-5 md:shadow-none">
 
       {/* Main Content */}
       <div className="flex flex-col items-center justify-center flex-1">
 
         {/* Vehicle */}
-     {currentVehicle && (
-  <img
-    src={currentVehicle.image}
-    alt=""
-    className="w-40 h-40 object-contain"
-  />
-)}
+        {currentVehicle && (
+          <img
+            src={currentVehicle.image}
+            alt={currentVehicle.name}
+            className="w-40 h-40 object-contain md:w-36 md:h-36"
+          />
+        )}
 
         {/* Loader */}
         <div className="mt-4">
@@ -49,11 +49,11 @@ const LookingForDriver = ({
         </div>
 
         {/* Text */}
-        <h1 className="text-2xl font-bold mt-6 text-center">
+        <h1 className="text-2xl font-bold mt-6 text-center md:text-xl">
           Looking for a Driver
         </h1>
 
-        <p className="text-gray-500 text-center mt-2 px-4">
+        <p className="text-gray-500 text-center mt-2 px-4 text-sm md:px-2">
           Please wait while we connect you with a nearby driver...
         </p>
       </div>
@@ -61,7 +61,7 @@ const LookingForDriver = ({
       {/* Cancel Button */}
       <button
         onClick={() => setLookingForDriver(false)}
-        className="w-full bg-red-500 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-red-600 transition-all duration-300"
+        className="w-full bg-red-500 text-white py-4 rounded-2xl text-lg font-semibold hover:bg-red-600 transition-all duration-300 md:py-3 md:text-base"
       >
         Cancel Ride
       </button>
