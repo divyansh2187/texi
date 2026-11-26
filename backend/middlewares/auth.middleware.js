@@ -1,7 +1,7 @@
-const userModel = require("../models/UserModel");
-const blacklist = require("../models/blacklistToken.model");
+const userModel = require("./models/UserModel");
+const blacklist = require("./models/blacklistToken.model");
 const jwt = require("jsonwebtoken");
-const captainModel = require("../models/CaptianModel");
+const captainModel = require("./models/CaptianModel");
 
 
 // ================= USER AUTH =================
@@ -70,11 +70,13 @@ module.exports.authUser = async (req, res, next) => {
 
   } catch (err) {
 
+    console.error("USER AUTH ERROR:", err);
+
     return res.status(401).json({
-      message: "Unauthorized"
+        message: "Unauthorized"
     });
 
-  }
+}
 
 };
 
