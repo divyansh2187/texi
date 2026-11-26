@@ -1,7 +1,7 @@
-const userModel = require("./models/UserModel");
-const blacklist = require("./models/blacklistToken.model");
+const userModel = require("../models/UserModel");
+const blacklist = require("../models/blacklistToken.model");
 const jwt = require("jsonwebtoken");
-const captainModel = require("./models/CaptianModel");
+const captainModel = require("../models/CaptianModel");
 
 
 // ================= USER AUTH =================
