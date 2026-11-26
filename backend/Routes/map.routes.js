@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 
-const mapController = require("../controllers/map.controller");
+const mapController = require("../Controllers/map.controller");
 const validate = require("../middlewares/validation.middleware");
 const { addressSchema } = require("../validator/map.validator");
 const { authUser } = require("../middlewares/auth.middleware");
