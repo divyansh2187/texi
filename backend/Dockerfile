@@ -18,7 +18,7 @@ COPY . .
 ENV NODE_ENV=production
 
 # Document the default backend port
-EXPOSE 3000
+EXPOSE 10000
 
 # Start the backend server
 CMD ["node", "server.js"]
