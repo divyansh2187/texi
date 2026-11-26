@@ -5,7 +5,7 @@ import UserLogin from "./pages/UserLogin";
 import UserSignup from "./pages/UserSignup";
 import CaptainSignup from "./pages/CaptainSignup";
 import CaptainLogin from "./pages/CaptainLogin";
-import Homepage from "./pages/homepage";
+import Homepage from "./pages/Homepage";
 import Protected from "./pages/protected";
 import NotFound from "./pages/Notfound";
 import { LoginUser } from "./api/AuthApi";
