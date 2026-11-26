@@ -37,9 +37,9 @@ module.exports.registerUser = async (req, res, next) => {
     .status(201)
     .cookie("token", token, {
       httpOnly: true,
-      secure: false, // true in production (HTTPS)
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000
     })
     .json({ status: "success", user, token });
 };
@@ -73,9 +73,9 @@ module.exports.loginUser = async (req, res, next) => {
     .status(200)
     .cookie("token", token, {
       httpOnly: true,
-      secure: true, // true in production (HTTPS)
-      sameSite: "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
+      secure: true,
+      sameSite: "none",
+      maxAge: 7 * 24 * 60 * 60 * 1000
     })
     .json({ status: "success", user, token });
 };
@@ -85,7 +85,14 @@ module.exports.GetUserProfile = async (req, res, next) => {
 };
 
 module.exports.logoutUser = async (req, res, next) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/"
+});
+
+
   const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
 
   await blacklistTokenModel.create({ token });

@@ -39,8 +39,8 @@ module.exports.registerCaptain = async(req, res, next) => {
     .status(201)
     .cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // true in production (HTTPS)
-      sameSite: "lax",
+      secure: true,
+      sameSite: "none",
       maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
     })
     .json({ status: "success", captain, token });
@@ -86,8 +86,8 @@ module.exports.loginCaptain = async (req, res, next) => {
             .status(200)
             .cookie("token", token, {
                 httpOnly: true,
-                secure: process.env.NODE_ENV === "production",
-                sameSite: "lax",
+                secure: true,
+                sameSite: "none",
                 maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in milliseconds
             })
             .json({
@@ -110,7 +110,12 @@ module.exports.logoutCaptain = async(req , res , next)=>{
    const token = req.cookies.token ||  req.headers.authorization?.split(' ')[1];
 
    await blackList.create({token});
-    res.clearCookie('token');
+    res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "none",
+    path: "/"
+});
 
     res.status(200).json({ message:'successfully logout' });
 
