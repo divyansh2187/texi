@@ -43,7 +43,7 @@ const getDistanceAndTimeService = async (origin, destination) => {
         console.log("STEP 3: Requesting OpenRouteService");
 
         const response = await axios.post(
-            "https://api.openrouteservice.org/v2/directions/driving-car/geojson",
+            "https://api.opehttps://api.heigit.org/openrouteservice/v2/directions/driving-car/geojsonnrouteservice.org/v2/directions/driving-car/geojson",
             {
                 coordinates: [
                     [originCoords.lon, originCoords.lat],
@@ -132,7 +132,7 @@ const getRouteBetweenCoordinates = async (
   }
 
   const response = await axios.post(
-    "https://api.openrouteservice.org/v2/directions/driving-car/geojson",
+    "https://api.heigit.org/openrouteservice/v2/directions/driving-car/geojson",
     {
       coordinates: [
         [Number(originLng), Number(originLat)],
