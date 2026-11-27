@@ -12,7 +12,7 @@ const UserSignup = () => {
   const [email, setemail] = useState("");
   const [pass, setpass] = useState("");
   const navigate = useNavigate();
-  const { User, setUser } = React.useContext(UserDataContext);
+  const { user, setUser } = React.useContext(UserDataContext);
 
   const submitHandler = async (e) => {
     e.preventDefault();

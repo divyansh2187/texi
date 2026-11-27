@@ -1,6 +1,6 @@
 const mapApi = require("../config/mapApi");
 const axios = require("axios");
-const captainModel = require("../models/CaptianModel");
+const captainModel = require("../middlewares/models/CaptianModel");
 
 
 

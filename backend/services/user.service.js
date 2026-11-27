@@ -1,4 +1,4 @@
-const UserModel = require("../models/UserModel");
+const UserModel = require("../middlewares/models/UserModel");
 
 module.exports.createUser = async({ fullname, email, password }) => {
 

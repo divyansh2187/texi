@@ -1,8 +1,8 @@
-const rideModel = require("../models/rideModel");
+const rideModel = require("../middlewares/models/rideModel");
 const mapService = require("../services/map.service");
 const crypto = require("crypto");
 const { sendMessageToSocketID } = require("../socket");
-const userModel = require("../models/UserModel");
+const userModel = require("../middlewares/models/UserModel");
 
 
 const fareRates = {
