@@ -33,67 +33,75 @@ const getAddressCoordinates = async (address) => {
 
 
 const getDistanceAndTimeService = async (origin, destination) => {
-    const originCoords = await getAddressCoordinates(origin);
-    const destinationCoords = await getAddressCoordinates(destination);
+    try {
+        console.log("STEP 1: Fetching origin coordinates");
+        const originCoords = await getAddressCoordinates(origin);
 
-    const response = await axios.post(
-        "https://api.openrouteservice.org/v2/directions/driving-car/geojson",
-        {
-            coordinates: [
-                [originCoords.lon, originCoords.lat],
-                [destinationCoords.lon, destinationCoords.lat],
-            ],
-        },
-        {
-            headers: {
-                Authorization: process.env.ORS_API_KEY,
-                "Content-Type": "application/json",
-                Accept: "application/geo+json",
+        console.log("STEP 2: Fetching destination coordinates");
+        const destinationCoords = await getAddressCoordinates(destination);
+
+        console.log("STEP 3: Requesting OpenRouteService");
+
+        const response = await axios.post(
+            "https://api.openrouteservice.org/v2/directions/driving-car/geojson",
+            {
+                coordinates: [
+                    [originCoords.lon, originCoords.lat],
+                    [destinationCoords.lon, destinationCoords.lat],
+                ],
             },
+            {
+                headers: {
+                    Authorization: process.env.ORS_API_KEY,
+                    "Content-Type": "application/json",
+                    Accept: "application/geo+json",
+                },
+            }
+        );
+
+        console.log("STEP 4: Route received successfully");
+
+        const route = response.data.features?.[0];
+
+        if (!route) {
+            throw new Error("No route found");
         }
-    );
 
-    const route = response.data.features?.[0];
+        const summary = route.properties.summary;
 
-    if (!route) {
-        throw new Error("No route found between the specified locations");
+        return {
+            distance: {
+                meters: summary.distance,
+                kilometers: (summary.distance / 1000).toFixed(2),
+            },
+            duration: {
+                seconds: summary.duration,
+                minutes: Math.ceil(summary.duration / 60),
+            },
+            pickupCoordinates: {
+                lat: originCoords.lat,
+                lng: originCoords.lon,
+            },
+            destinationCoordinates: {
+                lat: destinationCoords.lat,
+                lng: destinationCoords.lon,
+            },
+            routeCoordinates: route.geometry.coordinates.map(
+                ([longitude, latitude]) => [latitude, longitude]
+            ),
+        };
+
+    } catch (error) {
+        console.error("DISTANCE SERVICE FAILED:", {
+            message: error.message,
+            status: error.response?.status,
+            url: error.config?.url,
+            response: error.response?.data
+        });
+
+        throw error;
     }
-
-    const summary = route.properties.summary;
-
-    // ORS returns [longitude, latitude].
-    // Leaflet expects [latitude, longitude].
-    const routeCoordinates = route.geometry.coordinates.map(
-        ([longitude, latitude]) => [latitude, longitude]
-    );
-
-
-    return {
-        distance: {
-            meters: summary.distance,
-            kilometers: (summary.distance / 1000).toFixed(2),
-        },
-
-        duration: {
-            seconds: summary.duration,
-            minutes: Math.ceil(summary.duration / 60),
-        },
-
-        pickupCoordinates: {
-            lat: originCoords.lat,
-            lng: originCoords.lon,
-        },
-
-        destinationCoordinates: {
-            lat: destinationCoords.lat,
-            lng: destinationCoords.lon,
-        },
-
-        routeCoordinates,
-    };
-
 };
-
 
 
 const getRouteBetweenCoordinates = async (
