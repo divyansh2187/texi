@@ -3,8 +3,8 @@ const router = express.Router();
 
 const jwt = require("jsonwebtoken");
 
-const userModel = require("../middlewares/models/UserModel");
-const captainModel = require("../middlewares/models/CaptianModel");
+const userModel = require("../models/UserModel");
+const captainModel = require("../models/CaptianModel");
 
 router.get("/check", async (req, res) => {
 

@@ -1,4 +1,4 @@
-const CaptainModel = require('../middlewares/models/CaptianModel');
+const CaptainModel = require('../models/CaptianModel');
 
 module.exports.createCaptain = async({
     firstname,
